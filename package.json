@@ -1,40 +1,31 @@
 {
-  "name": "react-example",
+  "name": "forge-deals",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
-    "start": "node dist/server.cjs"
-  },
-  "dependencies": {
-    "@google/genai": "^1.29.0",
-    "@supabase/supabase-js": "^2.105.1",
-    "@tailwindcss/vite": "^4.1.14",
-    "@vitejs/plugin-react": "^5.0.4",
-    "clsx": "^2.1.1",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "react-router-dom": "^7.14.2",
-    "recharts": "^3.8.1",
-    "tailwind-merge": "^3.5.0",
-    "vite": "^6.2.3"
+    "infra:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:workers": "npm --workspace apps/workers run dev",
+    "chrome:legacy": "node start-chrome-CDP.js",
+    "chrome:setup": "node scripts/setup-and-start.js setup",
+    "chrome:start": "node scripts/setup-and-start.js start",
+    "chrome:open": "node scripts/open-pages.js",
+    "chrome:test": "npx tsx tests/test-cdp-connection.ts",
+    "browser:connect": "npx tsx scripts/connect-browser.ts",
+    "test": "npx tsx tests/run-tests.ts",
+    "test:cdp": "npx tsx tests/test-cdp-connection.ts",
+    "test:fb": "npx tsx tests/run-tests.ts 2",
+    "typecheck": "npm -ws run typecheck",
+    "lint": "npm -ws run lint",
+    "build": "npm -ws run build"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
-    "autoprefixer": "^10.4.21",
-    "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
   }
 }

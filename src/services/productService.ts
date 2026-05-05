@@ -17,6 +17,10 @@ const MOCK_PRODUCTS: Product[] = [
     ai_description: 'Alta performance para perfurações em concreto, aço e madeira.',
     ai_score: 92,
     active: true,
+    is_hot: false,
+    views: 0,
+    clicks: 0,
+    ctr: 0,
     created_at: new Date().toISOString()
   },
   {
@@ -34,6 +38,10 @@ const MOCK_PRODUCTS: Product[] = [
     ai_description: 'Conjunto essencial para mecânica e manutenção industrial.',
     ai_score: 85,
     active: true,
+    is_hot: false,
+    views: 0,
+    clicks: 0,
+    ctr: 0,
     created_at: new Date().toISOString()
   },
   {
@@ -51,6 +59,10 @@ const MOCK_PRODUCTS: Product[] = [
     ai_description: 'Ideal para pinturas domésticas e serviços leves de inflagem.',
     ai_score: 78,
     active: true,
+    is_hot: false,
+    views: 0,
+    clicks: 0,
+    ctr: 0,
     created_at: new Date().toISOString()
   }
 ];

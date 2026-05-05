@@ -11,7 +11,8 @@ import {
   Cpu,
   Monitor,
   Code,
-  Link2
+  Link2,
+  Users
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -23,6 +24,8 @@ export const Sidebar = () => {
     { icon: Monitor, label: 'Crawler Engine', to: '/crawler' },
     { icon: Code, label: 'Playwright Specs', to: '/worker-docs' },
     { icon: Link2, label: 'Affiliate Engine', to: '/affiliate-engine' },
+    { icon: Target, label: 'Affiliate Manager', to: '/affiliate-manager' },
+    { icon: Users, label: 'Social Control', to: '/social-control-center' },
     { icon: Target, label: 'Ofertas Ativas', to: '/ofertas' },
     { icon: BarChart3, label: 'Relatórios', to: '/relatorios' },
     { icon: Settings, label: 'Configurações', to: '/configuracoes' },

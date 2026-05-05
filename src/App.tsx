@@ -9,6 +9,9 @@ import { Automation } from './pages/Automation';
 import { CrawlerEngine } from './pages/CrawlerEngine';
 import { PlaywrightWorker } from './pages/PlaywrightWorker';
 import { AffiliateWorker } from './pages/AffiliateWorker';
+import { AffiliateLinkManager } from './pages/AffiliateLinkManager';
+import { SocialControlCenter } from './pages/SocialControlCenter';
+import { SessionDashboard } from './modules/browser-session/dashboardSession.page';
 
 // Placeholder for other pages
 const Placeholder = ({ title }: { title: string }) => (
@@ -38,6 +41,18 @@ export default function App() {
               <Route path="/crawler" element={<CrawlerEngine />} />
               <Route path="/worker-docs" element={<PlaywrightWorker />} />
               <Route path="/affiliate-engine" element={<AffiliateWorker />} />
+              <Route path="/affiliate-manager" element={() => {
+                switch (window.location.pathname) {
+                  case '/affiliate-manager':
+                    return <AffiliateLinkManager />;
+                  case '/social-control-center':
+                    return <SocialControlCenter />;
+                  case '/session-manager':
+                    return <SessionDashboard />;
+                  default:
+                    return <Dashboard />;
+                }
+              }} />
               <Route path="/ofertas" element={<Placeholder title="Ofertas Ativas" />} />
               <Route path="/relatorios" element={<Placeholder title="Relatórios Analíticos" />} />
               <Route path="/configuracoes" element={<Placeholder title="Configurações do Sistema" />} />

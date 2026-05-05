@@ -1,0 +1,14 @@
+{
+  "name": "@forge-deals/shared",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "exports": {
+    "./types": "./src/types.ts",
+    "./logger": "./src/logger.ts",
+    "./queues": "./src/queues.ts",
+    "./jobs": "./src/jobs.ts"
+  }
+}

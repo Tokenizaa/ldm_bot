@@ -1,31 +1,30 @@
 {
-  "name": "forge-deals",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "name": "forge-deals-bot",
+  "version": "1.0.0",
+  "description": "Bot simples para extração de produtos da Loja do Mecânico e postagem no Facebook",
+  "main": "dist/index.js",
   "scripts": {
-    "infra:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
-    "infra:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
-    "dev:web": "npm --workspace apps/web run dev",
-    "dev:api": "npm --workspace apps/api run dev",
-    "dev:workers": "npm --workspace apps/workers run dev",
-    "chrome:legacy": "node start-chrome-CDP.js",
-    "chrome:setup": "node scripts/setup-and-start.js setup",
-    "chrome:start": "node scripts/setup-and-start.js start",
-    "chrome:open": "node scripts/open-pages.js",
-    "chrome:test": "npx tsx tests/test-cdp-connection.ts",
-    "browser:connect": "npx tsx scripts/connect-browser.ts",
-    "test": "npx tsx tests/run-tests.ts",
-    "test:cdp": "npx tsx tests/test-cdp-connection.ts",
-    "test:fb": "npx tsx tests/run-tests.ts 2",
-    "typecheck": "npm -ws run typecheck",
-    "lint": "npm -ws run lint",
-    "build": "npm -ws run build"
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "chrome:start": "node start-chrome-CDP.js",
+    "test": "ts-node tests/run-tests.ts",
+    "test:cdp": "ts-node tests/run-tests.ts 1"
+  },
+  "keywords": ["bot", "crawler", "facebook", "automation", "loja-do-mecanico"],
+  "author": "ForgeDeals",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "@supabase/supabase-js": "^2.38.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "ts-node": "^10.9.0",
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

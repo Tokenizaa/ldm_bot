@@ -71,20 +71,6 @@ export interface AffiliatePriceHistory {
   created_at: string;
 }
 
-export interface CrawlerQueue {
-  scraping: number;
-  ai_processing: number;
-  publication: number;
-}
-
-export interface PlaywrightStatus {
-  browser_status: 'running' | 'idle' | 'error';
-  last_url: string;
-  memory_usage: string;
-  avg_collection_time: string;
-  recent_screenshots: string[];
-}
-
 export interface PriceHistory {
   id: string;
   product_id: string;
@@ -107,3 +93,4 @@ export interface DashboardStats {
   topCategories: { name: string; count: number }[];
   topBrands: { name: string; count: number }[];
 }
+

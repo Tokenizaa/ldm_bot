@@ -1,0 +1,9 @@
+2026/05/09-12:39:04.155 4280 Reusing MANIFEST C:\Users\LG\Downloads\netto1\ldm_bot\browser-data\Default\Local Storage\leveldb/MANIFEST-000001
+2026/05/09-12:39:04.184 4280 Recovering log #31
+2026/05/09-12:39:04.196 4280 Reusing old log C:\Users\LG\Downloads\netto1\ldm_bot\browser-data\Default\Local Storage\leveldb/000031.log 
+2026/05/09-12:40:04.437 4280 Level-0 table #35: started
+2026/05/09-12:40:05.538 4280 Level-0 table #35: 32373 bytes OK
+2026/05/09-12:40:05.544 4280 Delete type=0 #31
+2026/05/09-12:42:24.433 3040 Level-0 table #37: started
+2026/05/09-12:42:24.448 3040 Level-0 table #37: 27885 bytes OK
+2026/05/09-12:42:24.454 3040 Delete type=0 #34

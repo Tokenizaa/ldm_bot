@@ -1,0 +1,14 @@
+2026/05/09-13:10:05.265 1a20 Reusing MANIFEST C:\Users\LG\Downloads\netto1\ldm_bot\browser-data\Default\IndexedDB\https_www.lojadomecanico.com.br_0.indexeddb.leveldb/MANIFEST-000001
+2026/05/09-13:10:05.279 1a20 Recovering log #337
+2026/05/09-13:10:05.280 1a20 Reusing old log C:\Users\LG\Downloads\netto1\ldm_bot\browser-data\Default\IndexedDB\https_www.lojadomecanico.com.br_0.indexeddb.leveldb/000337.log 
+2026/05/09-13:10:05.280 1a20 Delete type=2 #336
+2026/05/09-13:10:06.383 3a84 Level-0 table #342: started
+2026/05/09-13:10:06.394 3a84 Level-0 table #342: 1505 bytes OK
+2026/05/09-13:10:06.405 3a84 Delete type=0 #337
+2026/05/09-13:10:06.418 1a20 Manual compaction at level-0 from '\x00b\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00c\x00\x00\x00' @ 0 : 0; will stop at '\x00b\x00\x00\x05' @ 8004 : 1
+2026/05/09-13:10:06.418 1a20 Compacting 1@0 + 1@1 files
+2026/05/09-13:10:06.433 1a20 Generated table #343@0: 566 keys, 6797 bytes
+2026/05/09-13:10:06.433 1a20 Compacted 1@0 + 1@1 files => 6797 bytes
+2026/05/09-13:10:06.438 1a20 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/05/09-13:10:06.441 1a20 Delete type=2 #342
+2026/05/09-13:10:06.445 1a20 Manual compaction at level-0 from '\x00b\x00\x00\x05' @ 8004 : 1 .. '\x00c\x00\x00\x00' @ 0 : 0; will stop at (end)

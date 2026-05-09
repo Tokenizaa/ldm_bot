@@ -3,15 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { Dashboard } from './pages/Dashboard';
+import { FacebookControlCenter } from './pages/FacebookControlCenter';
+import { Analytics } from './pages/Analytics';
+import { OllamaCenter } from './pages/OllamaCenter';
+import { ContentPlanner } from './pages/ContentPlanner';
 import { ProductList } from './pages/ProductList';
-import { ProductDetails } from './pages/ProductDetails';
-import { Automation } from './pages/Automation';
-import { CrawlerEngine } from './pages/CrawlerEngine';
-import { PlaywrightWorker } from './pages/PlaywrightWorker';
-import { AffiliateWorker } from './pages/AffiliateWorker';
-import { AffiliateLinkManager } from './pages/AffiliateLinkManager';
-import { SocialControlCenter } from './pages/SocialControlCenter';
-import { SessionDashboard } from './modules/browser-session/dashboardSession.page';
+import { Settings } from './pages/Settings';
 
 // Placeholder for other pages
 const Placeholder = ({ title }: { title: string }) => (
@@ -35,27 +32,13 @@ export default function App() {
           <div className="flex-1 overflow-hidden">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/produtos" element={<ProductList />} />
-              <Route path="/produtos/:id" element={<ProductDetails />} />
-              <Route path="/automacao" element={<Automation />} />
-              <Route path="/crawler" element={<CrawlerEngine />} />
-              <Route path="/worker-docs" element={<PlaywrightWorker />} />
-              <Route path="/affiliate-engine" element={<AffiliateWorker />} />
-              <Route path="/affiliate-manager" element={() => {
-                switch (window.location.pathname) {
-                  case '/affiliate-manager':
-                    return <AffiliateLinkManager />;
-                  case '/social-control-center':
-                    return <SocialControlCenter />;
-                  case '/session-manager':
-                    return <SessionDashboard />;
-                  default:
-                    return <Dashboard />;
-                }
-              }} />
-              <Route path="/ofertas" element={<Placeholder title="Ofertas Ativas" />} />
-              <Route path="/relatorios" element={<Placeholder title="Relatórios Analíticos" />} />
-              <Route path="/configuracoes" element={<Placeholder title="Configurações do Sistema" />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/facebook" element={<FacebookControlCenter />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/ollama" element={<OllamaCenter />} />
+              <Route path="/planner" element={<ContentPlanner />} />
+              <Route path="/products" element={<ProductList />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

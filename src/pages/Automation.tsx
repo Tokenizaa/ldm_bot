@@ -1,40 +1,193 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Activity, 
-  Terminal, 
-  Webhook, 
-  Database, 
-  AlertCircle, 
-  RefreshCw, 
-  Play,
-  CheckCircle2,
+  Play, 
+  Pause, 
+  Settings, 
+  Shield, 
+  Zap, 
+  AlertTriangle, 
+  CheckCircle2, 
+  XCircle, 
+  RefreshCw,
+  Save,
   Clock,
-  Zap
+  Activity,
+  Target,
+  Ban,
+  Power,
+  Gauge,
+  Timer,
+  Lock,
+  Unlock,
+  TrendingUp,
+  Users,
+  MessageSquare
 } from 'lucide-react';
-import { useSupabaseQuery } from '../hooks/useSupabase';
-import { Product, CrawlerLog } from '../types';
-import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
+import { cn } from '../lib/utils';
+
+interface AutomationConfig {
+  bot_enabled: boolean;
+  safe_mode: boolean;
+  aggressive_mode: boolean;
+  daily_limit: number;
+  auto_retry_failed: boolean;
+  max_retries: number;
+  delays: {
+    min_delay_minutes: number;
+    max_delay_minutes: number;
+    randomization_enabled: boolean;
+    human_like_pacing: boolean;
+  };
+  safety: {
+    max_hourly_posts: number;
+    auto_pause_on_risk: boolean;
+    cooldown_after_rejection: number;
+    monitor_account_health: boolean;
+  };
+  performance: {
+    concurrent_processing: boolean;
+    max_concurrent_tasks: number;
+    memory_limit_mb: number;
+    cleanup_interval_minutes: number;
+  };
+}
 
 export const Automation = () => {
-  const { data: latestProducts, loading: loadingProducts } = useSupabaseQuery<Product>('products', { limit: 5, orderCol: 'created_at' });
-  const { data: logs, loading: loadingLogs } = useSupabaseQuery<CrawlerLog>('crawler_logs', { limit: 10, orderCol: 'created_at' });
-  
-  const [testingWebhook, setTestingWebhook] = useState(false);
+  const [config, setConfig] = useState<AutomationConfig>({
+    bot_enabled: true,
+    safe_mode: false,
+    aggressive_mode: false,
+    daily_limit: 10,
+    auto_retry_failed: true,
+    max_retries: 3,
+    delays: {
+      min_delay_minutes: 120,
+      max_delay_minutes: 240,
+      randomization_enabled: true,
+      human_like_pacing: true
+    },
+    safety: {
+      max_hourly_posts: 2,
+      auto_pause_on_risk: true,
+      cooldown_after_rejection: 60,
+      monitor_account_health: true
+    },
+    performance: {
+      concurrent_processing: false,
+      max_concurrent_tasks: 3,
+      memory_limit_mb: 2048,
+      cleanup_interval_minutes: 30
+    }
+  });
 
-  const testWebhook = async () => {
-    setTestingWebhook(true);
-    // Simulate webhook test
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setTestingWebhook(false);
-    alert('Webhook de teste enviado com sucesso!');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  // Mock system status
+  const [systemStatus, setSystemStatus] = useState({
+    bot_running: true,
+    current_mode: 'normal' as 'safe' | 'normal' | 'aggressive',
+    posts_today: 7,
+    posts_remaining: 3,
+    next_post_in: '45 minutos',
+    system_health: 'good' as 'good' | 'warning' | 'critical',
+    active_tasks: 2,
+    queued_tasks: 5,
+    memory_usage: 1247,
+    cpu_usage: 23
+  });
+
+  useEffect(() => {
+    loadConfig();
+    // Simulate real-time updates
+    const interval = setInterval(() => {
+      setSystemStatus(prev => ({
+        ...prev,
+        next_post_in: Math.max(1, parseInt(prev.next_post_in) - 1) + ' minutos',
+        memory_usage: prev.memory_usage + Math.floor(Math.random() * 20) - 10
+      }));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadConfig = async () => {
+    try {
+      setIsLoading(true);
+      // Mock API call - replace with real Supabase call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error loading automation config:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const crawlerStatus = {
-    active: true,
-    lastRun: '12 minutos atrás',
-    efficiency: '94%',
-    uikitStatus: 'Operational'
+  const saveConfig = async () => {
+    try {
+      setIsSaving(true);
+      // Mock API call - replace with real Supabase call
+      console.log('Saving automation config:', config);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setHasChanges(false);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error saving automation config:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updateConfig = (updates: Partial<AutomationConfig>) => {
+    setConfig(prev => ({ ...prev, ...updates }));
+    setHasChanges(true);
+  };
+
+  const startBot = async () => {
+    try {
+      console.log('Starting bot...');
+      setSystemStatus(prev => ({ ...prev, bot_running: true }));
+      updateConfig({ bot_enabled: true });
+    } catch (error) {
+      console.error('Error starting bot:', error);
+    }
+  };
+
+  const stopBot = async () => {
+    try {
+      console.log('Stopping bot...');
+      setSystemStatus(prev => ({ ...prev, bot_running: false }));
+      updateConfig({ bot_enabled: false });
+    } catch (error) {
+      console.error('Error stopping bot:', error);
+    }
+  };
+
+  const toggleSafeMode = () => {
+    const newSafeMode = !config.safe_mode;
+    updateConfig({ 
+      safe_mode: newSafeMode,
+      aggressive_mode: false 
+    });
+    setSystemStatus(prev => ({ 
+      ...prev, 
+      current_mode: newSafeMode ? 'safe' : 'normal' 
+    }));
+  };
+
+  const toggleAggressiveMode = () => {
+    const newAggressiveMode = !config.aggressive_mode;
+    updateConfig({ 
+      aggressive_mode: newAggressiveMode,
+      safe_mode: false 
+    });
+    setSystemStatus(prev => ({ 
+      ...prev, 
+      current_mode: newAggressiveMode ? 'aggressive' : 'normal' 
+    }));
   };
 
   return (
@@ -45,208 +198,528 @@ export const Automation = () => {
             <Activity className="text-accent w-8 h-8" />
             Central de Automação
           </h2>
-          <p className="text-gray-400 mt-1">Monitoramento de pipelines, crawler e integração n8n.</p>
+          <p className="text-gray-400 mt-1">Controle completo do bot, modos de segurança e performance</p>
         </div>
-        <div className="flex gap-3">
-           <button 
-             onClick={testWebhook}
-             disabled={testingWebhook}
-             className="flex items-center gap-2 bg-white/5 border border-border px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 hover:bg-white/10 hover:text-white transition-all disabled:opacity-50"
-           >
-             {testingWebhook ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Webhook className="w-4 h-4" />}
-             Testar Webhook
-           </button>
-           <button className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-accent/20 hover:scale-105 active:scale-95 transition-all">
-             <Play className="w-4 h-4 fill-white" />
-             Forçar Crawler
-           </button>
+        <div className="flex gap-4">
+          <button
+            onClick={loadConfig}
+            className="premium-button px-4 py-2 flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Atualizar
+          </button>
+          <button
+            onClick={saveConfig}
+            disabled={isSaving || !hasChanges}
+            className={cn(
+              "premium-button px-4 py-2 flex items-center gap-2",
+              (!hasChanges || isSaving) && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? 'Salvando...' : 'Salvar'}
+          </button>
         </div>
       </header>
 
-      {/* DevOps Status Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatusCard 
-          label="Crawler Status" 
-          value={crawlerStatus.active ? 'Ativo' : 'Offline'} 
-          status={crawlerStatus.active ? 'success' : 'error'} 
-          subtext={`Última execução: ${crawlerStatus.lastRun}`} 
-        />
-        <StatusCard 
-          label="n8n Pipeline" 
-          value="Conectado" 
-          status="success" 
-          subtext="v2.1.0 - Endpoint Protegido" 
-        />
-        <StatusCard 
-          label="Ingestão (24h)" 
-          value="142" 
-          status="neutral" 
-          subtext="+12% que ontem" 
-        />
-        <StatusCard 
-          label="Taxa de Erro" 
-          value="0.32%" 
-          status="success" 
-          subtext="Abaixo do limite sugerido" 
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Realtime Terminal Section */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="premium-card overflow-hidden border-accent/20">
-            <div className="bg-white/5 px-6 py-4 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Terminal className="text-accent w-5 h-5" />
-                <h3 className="font-bold text-white uppercase tracking-widest text-xs font-mono">Stream de Ingestão Realtime</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-                <span className="text-[10px] text-gray-400 font-mono">LIVE SOCKET CONNECTED</span>
+      {/* System Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className={cn(
+          "premium-card p-4 border-2",
+          systemStatus.bot_running ? "border-green-500/30" : "border-red-500/30"
+        )}>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-400">Status Bot</div>
+              <div className={cn(
+                "text-xl font-bold",
+                systemStatus.bot_running ? "text-green-400" : "text-red-400"
+              )}>
+                {systemStatus.bot_running ? 'Rodando' : 'Parado'}
               </div>
             </div>
-            <div className="bg-black/40 p-6 font-mono text-sm space-y-3 min-h-[300px] max-h-[450px] overflow-y-auto technical-grid">
-               {latestProducts?.map((p, i) => (
-                 <motion.div 
-                   initial={{ opacity: 0, x: -10 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   key={p.id} 
-                   className="flex gap-4 group"
-                 >
-                   <span className="text-gray-600 shrink-0">[{new Date(p.created_at).toLocaleTimeString()}]</span>
-                   <span className="text-green-500 shrink-0">SUCCESS</span>
-                   <div className="flex-1 text-gray-300">
-                     <span className="text-white font-bold">PROD_INGEST:</span> {p.title.slice(0, 40)}... 
-                     <span className="text-accent ml-2">[{p.brand}]</span>
-                     <span className="text-gray-500 ml-2">v_score: {p.ai_score}</span>
-                   </div>
-                   <button className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-opacity">
-                     <RefreshCw className="w-3 h-3" />
-                   </button>
-                 </motion.div>
-               ))}
-               {!latestProducts?.length && !loadingProducts && (
-                 <div className="text-gray-600 italic">Aguardando novos sinais de entrada...</div>
-               )}
-            </div>
-          </div>
-
-          <div className="premium-card p-6">
-             <div className="flex items-center justify-between mb-6">
-                <h3 className="font-bold text-white flex items-center gap-2 uppercase tracking-widest text-xs">
-                   <Clock className="w-4 h-4 text-accent" />
-                   Histórico de Eventos
-                </h3>
-             </div>
-             <div className="space-y-4">
-                {logs?.map((log) => (
-                  <div key={log.id} className="flex items-center gap-4 p-3 bg-white/5 border border-white/5 rounded-lg">
-                    <div className={cn(
-                      "p-2 rounded flex items-center justify-center",
-                      log.status === 'success' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
-                    )}>
-                      {log.status === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-white font-medium">{log.source}</p>
-                      <p className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString('pt-BR')}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-mono text-gray-300">{log.total_products} items</p>
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500">{log.status}</p>
-                    </div>
-                  </div>
-                ))}
-             </div>
+            <Power className={cn(
+              "w-5 h-5",
+              systemStatus.bot_running ? "text-green-400" : "text-red-400"
+            )} />
           </div>
         </div>
-
-        {/* Right: Source Integration */}
-        <div className="lg:col-span-4 space-y-8">
-           <div className="premium-card p-6 bg-accent/5 border-accent/20 overflow-hidden relative">
-              <Zap className="absolute -right-4 -top-4 w-24 h-24 text-accent opacity-10 rotate-12" />
-              <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                Dados Técnicos n8n
-              </h3>
-              <div className="space-y-4 text-xs">
-                 <div className="flex items-center justify-between p-2 bg-black/40 rounded">
-                    <span className="text-gray-400">ENDPOINT URL</span>
-                    <span className="text-white font-mono truncate max-w-[150px]">/api/public/ingest</span>
-                 </div>
-                 <div className="flex items-center justify-between p-2 bg-black/40 rounded">
-                    <span className="text-gray-400">AUTH TYPE</span>
-                    <span className="text-white font-mono">SUPABASE_ANON</span>
-                 </div>
-                 <div className="flex items-center justify-between p-2 bg-black/40 rounded">
-                    <span className="text-gray-400">PAYLOAD_FORMAT</span>
-                    <span className="text-white font-mono text-[10px]">JSON (APPLICATION/JSON)</span>
-                 </div>
+        
+        <div className="premium-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-400">Modo Atual</div>
+              <div className={cn(
+                "text-xl font-bold capitalize",
+                systemStatus.current_mode === 'safe' ? "text-blue-400" :
+                systemStatus.current_mode === 'aggressive' ? "text-orange-400" : "text-white"
+              )}>
+                {systemStatus.current_mode === 'safe' ? 'Seguro' :
+                 systemStatus.current_mode === 'aggressive' ? 'Agressivo' : 'Normal'}
               </div>
-           </div>
-
-           <div className="premium-card p-6">
-              <h3 className="text-white font-bold mb-6 text-sm uppercase tracking-widest">Fontes Ativas</h3>
-              <div className="space-y-6">
-                 <SourceItem 
-                   name="Loja do Mecânico" 
-                   type="Crawler (Playwright)" 
-                   delay="15min" 
-                   uptime={99.8} 
-                 />
-                 <SourceItem 
-                   name="n8n Worker 01" 
-                   type="HTTP Webhook" 
-                   delay="Instant" 
-                   uptime={100} 
-                 />
-                 <SourceItem 
-                   name="Google Gemini API" 
-                   type="IA Engine" 
-                   delay="5s" 
-                   uptime={98.5} 
-                 />
+            </div>
+            {systemStatus.current_mode === 'safe' ? (
+              <Shield className="w-5 h-5 text-blue-400" />
+            ) : systemStatus.current_mode === 'aggressive' ? (
+              <Zap className="w-5 h-5 text-orange-400" />
+            ) : (
+              <Activity className="w-5 h-5 text-white" />
+            )}
+          </div>
+        </div>
+        
+        <div className="premium-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-400">Posts Hoje</div>
+              <div className="text-xl font-bold text-white">
+                {systemStatus.posts_today}/{config.daily_limit}
               </div>
-           </div>
+            </div>
+            <MessageSquare className="w-5 h-5 text-accent" />
+          </div>
+        </div>
+        
+        <div className="premium-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-400">Próximo Post</div>
+              <div className="text-xl font-bold text-accent">
+                {systemStatus.next_post_in}
+              </div>
+            </div>
+            <Clock className="w-5 h-5 text-accent" />
+          </div>
         </div>
       </div>
+
+      {/* Bot Control */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="premium-card p-6"
+      >
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+          <Power className="w-5 h-5 text-accent" />
+          Controle do Bot
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={startBot}
+            disabled={systemStatus.bot_running}
+            className={cn(
+              "p-4 rounded-lg border transition-colors flex items-center gap-3",
+              systemStatus.bot_running 
+                ? "bg-gray-500/20 border-gray-500/30 text-gray-400 cursor-not-allowed"
+                : "bg-green-500/20 border-green-500/30 text-green-400 hover:bg-green-500/30"
+            )}
+          >
+            <Play className="w-5 h-5" />
+            <div className="text-left">
+              <div className="font-medium">Iniciar Bot</div>
+              <div className="text-xs opacity-75">Começar automação</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={stopBot}
+            disabled={!systemStatus.bot_running}
+            className={cn(
+              "p-4 rounded-lg border transition-colors flex items-center gap-3",
+              !systemStatus.bot_running 
+                ? "bg-gray-500/20 border-gray-500/30 text-gray-400 cursor-not-allowed"
+                : "bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30"
+            )}
+          >
+            <Pause className="w-5 h-5" />
+            <div className="text-left">
+              <div className="font-medium">Parar Bot</div>
+              <div className="text-xs opacity-75">Pausar automação</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => {
+              console.log('Emergency stop triggered');
+              stopBot();
+              updateConfig({ bot_enabled: false, safe_mode: true });
+            }}
+            className="p-4 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-3"
+          >
+            <Ban className="w-5 h-5" />
+            <div className="text-left">
+              <div className="font-medium">Parada Emergencial</div>
+              <div className="text-xs opacity-75">Parar tudo</div>
+            </div>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Operation Modes */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="premium-card p-6"
+      >
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+          <Settings className="w-5 h-5 text-accent" />
+          Modos de Operação
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <button
+            onClick={toggleSafeMode}
+            className={cn(
+              "p-4 rounded-lg border transition-colors",
+              config.safe_mode
+                ? "bg-blue-500/20 border-blue-500/30 text-blue-400"
+                : "bg-surface border-border text-gray-400 hover:text-white"
+            )}
+          >
+            <Shield className="w-6 h-6 mb-2" />
+            <div className="text-sm font-medium">Modo Seguro</div>
+            <div className="text-xs opacity-75 mt-1">
+              {config.safe_mode ? 'Ativado' : 'Desativado'}
+            </div>
+            <div className="text-xs opacity-50 mt-2">
+              Limites restritivos, delays maiores
+            </div>
+          </button>
+          
+          <button
+            onClick={() => {
+              updateConfig({ safe_mode: false, aggressive_mode: false });
+              setSystemStatus(prev => ({ ...prev, current_mode: 'normal' }));
+            }}
+            className={cn(
+              "p-4 rounded-lg border transition-colors",
+              !config.safe_mode && !config.aggressive_mode
+                ? "bg-accent/20 border-accent/30 text-accent"
+                : "bg-surface border-border text-gray-400 hover:text-white"
+            )}
+          >
+            <Activity className="w-6 h-6 mb-2" />
+            <div className="text-sm font-medium">Modo Normal</div>
+            <div className="text-xs opacity-75 mt-1">
+              {!config.safe_mode && !config.aggressive_mode ? 'Ativado' : 'Desativado'}
+            </div>
+            <div className="text-xs opacity-50 mt-2">
+              Balanceamento padrão
+            </div>
+          </button>
+          
+          <button
+            onClick={toggleAggressiveMode}
+            className={cn(
+              "p-4 rounded-lg border transition-colors",
+              config.aggressive_mode
+                ? "bg-orange-500/20 border-orange-500/30 text-orange-400"
+                : "bg-surface border-border text-gray-400 hover:text-white"
+            )}
+          >
+            <Zap className="w-6 h-6 mb-2" />
+            <div className="text-sm font-medium">Modo Agressivo</div>
+            <div className="text-xs opacity-75 mt-1">
+              {config.aggressive_mode ? 'Ativado' : 'Desativado'}
+            </div>
+            <div className="text-xs opacity-50 mt-2">
+              Frequência máxima, performance alta
+            </div>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Configuration Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Limits & Delays */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="premium-card p-6"
+        >
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <Timer className="w-4 h-4 text-accent" />
+            Limites e Delays
+          </h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">Limite Diário</label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={config.daily_limit}
+                onChange={(e) => updateConfig({ daily_limit: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Delay Mínimo (min)</label>
+                <input
+                  type="number"
+                  min="10"
+                  max="480"
+                  value={config.delays.min_delay_minutes}
+                  onChange={(e) => updateConfig({ 
+                    delays: { ...config.delays, min_delay_minutes: parseInt(e.target.value) }
+                  })}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Delay Máximo (min)</label>
+                <input
+                  type="number"
+                  min="30"
+                  max="720"
+                  value={config.delays.max_delay_minutes}
+                  onChange={(e) => updateConfig({ 
+                    delays: { ...config.delays, max_delay_minutes: parseInt(e.target.value) }
+                  })}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <button
+                onClick={() => updateConfig({ 
+                  delays: { ...config.delays, randomization_enabled: !config.delays.randomization_enabled }
+                })}
+                className={cn(
+                  "w-full px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
+                  config.delays.randomization_enabled
+                    ? "bg-accent text-white"
+                    : "bg-surface border border-border text-gray-400"
+                )}
+              >
+                {config.delays.randomization_enabled ? (
+                  <Unlock className="w-4 h-4" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+                Randomização: {config.delays.randomization_enabled ? 'Ativada' : 'Desativada'}
+              </button>
+              
+              <button
+                onClick={() => updateConfig({ 
+                  delays: { ...config.delays, human_like_pacing: !config.delays.human_like_pacing }
+                })}
+                className={cn(
+                  "w-full px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
+                  config.delays.human_like_pacing
+                    ? "bg-accent text-white"
+                    : "bg-surface border border-border text-gray-400"
+                )}
+              >
+                <Users className="w-4 h-4" />
+                Pacing Humano: {config.delays.human_like_pacing ? 'Ativado' : 'Desativado'}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Safety Settings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="premium-card p-6"
+        >
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-accent" />
+            Configurações de Segurança
+          </h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">Máximo por Hora</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={config.safety.max_hourly_posts}
+                onChange={(e) => updateConfig({ 
+                  safety: { ...config.safety, max_hourly_posts: parseInt(e.target.value) }
+                })}
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">
+                Cooldown Após Rejeição (min)
+              </label>
+              <input
+                type="number"
+                min="5"
+                max="480"
+                value={config.safety.cooldown_after_rejection}
+                onChange={(e) => updateConfig({ 
+                  safety: { ...config.safety, cooldown_after_rejection: parseInt(e.target.value) }
+                })}
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <button
+                onClick={() => updateConfig({ 
+                  safety: { ...config.safety, auto_pause_on_risk: !config.safety.auto_pause_on_risk }
+                })}
+                className={cn(
+                  "w-full px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
+                  config.safety.auto_pause_on_risk
+                    ? "bg-accent text-white"
+                    : "bg-surface border border-border text-gray-400"
+                )}
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Pausa Automática em Risco: {config.safety.auto_pause_on_risk ? 'Ativada' : 'Desativada'}
+              </button>
+              
+              <button
+                onClick={() => updateConfig({ 
+                  safety: { ...config.safety, monitor_account_health: !config.safety.monitor_account_health }
+                })}
+                className={cn(
+                  "w-full px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
+                  config.safety.monitor_account_health
+                    ? "bg-accent text-white"
+                    : "bg-surface border border-border text-gray-400"
+                )}
+              >
+                <TrendingUp className="w-4 h-4" />
+                Monitorar Saúde da Conta: {config.safety.monitor_account_health ? 'Ativado' : 'Desativada'}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Performance Settings */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="premium-card p-6"
+      >
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+          <Gauge className="w-5 h-5 text-accent" />
+          Performance e Recursos
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">Limite de Memória (MB)</label>
+              <input
+                type="number"
+                min="512"
+                max="8192"
+                step="256"
+                value={config.performance.memory_limit_mb}
+                onChange={(e) => updateConfig({ 
+                  performance: { ...config.performance, memory_limit_mb: parseInt(e.target.value) }
+                })}
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">Limpeza Automática (min)</label>
+              <input
+                type="number"
+                min="5"
+                max="120"
+                value={config.performance.cleanup_interval_minutes}
+                onChange={(e) => updateConfig({ 
+                  performance: { ...config.performance, cleanup_interval_minutes: parseInt(e.target.value) }
+                })}
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => updateConfig({ 
+                performance: { ...config.performance, concurrent_processing: !config.performance.concurrent_processing }
+              })}
+              className={cn(
+                "w-full px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2",
+                config.performance.concurrent_processing
+                  ? "bg-accent text-white"
+                  : "bg-surface border border-border text-gray-400"
+              )}
+            >
+              <Activity className="w-4 h-4" />
+              Processamento Concorrente: {config.performance.concurrent_processing ? 'Ativado' : 'Desativado'}
+            </button>
+            
+            {config.performance.concurrent_processing && (
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Máximo de Tasks Concorrentes</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={config.performance.max_concurrent_tasks}
+                  onChange={(e) => updateConfig({ 
+                    performance: { ...config.performance, max_concurrent_tasks: parseInt(e.target.value) }
+                  })}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* System Metrics */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="premium-card p-6"
+      >
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-accent" />
+          Métricas do Sistema
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-surface rounded-lg">
+            <div className="text-sm text-gray-400 mb-1">Tasks Ativos</div>
+            <div className="text-2xl font-bold text-white">{systemStatus.active_tasks}</div>
+          </div>
+          
+          <div className="p-4 bg-surface rounded-lg">
+            <div className="text-sm text-gray-400 mb-1">Tasks na Fila</div>
+            <div className="text-2xl font-bold text-accent">{systemStatus.queued_tasks}</div>
+          </div>
+          
+          <div className="p-4 bg-surface rounded-lg">
+            <div className="text-sm text-gray-400 mb-1">Uso de Memória</div>
+            <div className="text-2xl font-bold text-white">{systemStatus.memory_usage} MB</div>
+            <div className="text-xs text-gray-400 mt-1">
+              de {config.performance.memory_limit_mb} MB
+            </div>
+          </div>
+          
+          <div className="p-4 bg-surface rounded-lg">
+            <div className="text-sm text-gray-400 mb-1">Uso de CPU</div>
+            <div className="text-2xl font-bold text-white">{systemStatus.cpu_usage}%</div>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
-
-const StatusCard = ({ label, value, status, subtext }: any) => (
-  <div className="premium-card p-6 relative overflow-hidden group">
-    <div className={cn(
-      "absolute inset-0 opacity-[0.03] transition-opacity group-hover:opacity-[0.05]",
-      status === 'success' ? "bg-green-500" : status === 'error' ? "bg-red-500" : "bg-white"
-    )} />
-    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">{label}</p>
-    <div className="flex items-center gap-3">
-      <h4 className="text-2xl font-bold text-white tracking-tighter">{value}</h4>
-      <span className={cn(
-        "w-1.5 h-1.5 rounded-full shrink-0",
-        status === 'success' ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : 
-        status === 'error' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-gray-500"
-      )} />
-    </div>
-    <p className="text-[10px] text-gray-400 mt-2 font-mono italic">{subtext}</p>
-  </div>
-);
-
-const SourceItem = ({ name, type, uptime, delay }: any) => (
-  <div className="flex items-center gap-4">
-    <div className="w-1.5 h-10 bg-white/5 rounded-full overflow-hidden border border-white/5">
-      <div className="w-full bg-accent h-full" style={{ opacity: uptime / 100 }} />
-    </div>
-    <div className="flex-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-bold text-white">{name}</span>
-        <span className="text-[10px] font-mono text-accent">{uptime}%</span>
-      </div>
-      <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase tracking-tight">
-        <span>{type}</span>
-        <span>Delay: {delay}</span>
-      </div>
-    </div>
-  </div>
-);

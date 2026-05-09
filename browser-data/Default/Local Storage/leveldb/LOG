@@ -1,0 +1,15 @@
+2026/05/09-13:07:31.944 4f50 Reusing MANIFEST C:\Users\LG\Downloads\netto1\ldm_bot\browser-data\Default\Local Storage\leveldb/MANIFEST-000001
+2026/05/09-13:07:31.966 4f50 Recovering log #36
+2026/05/09-13:07:31.979 4f50 Reusing old log C:\Users\LG\Downloads\netto1\ldm_bot\browser-data\Default\Local Storage\leveldb/000036.log 
+2026/05/09-13:09:37.827 34c0 Level-0 table #40: started
+2026/05/09-13:09:38.300 34c0 Level-0 table #40: 27035 bytes OK
+2026/05/09-13:09:39.776 34c0 Delete type=0 #36
+2026/05/09-13:09:40.273 4f50 Compacting 4@0 + 1@1 files
+2026/05/09-13:09:55.985 4f50 Generated table #41@0: 205 keys, 23200 bytes
+2026/05/09-13:09:55.986 4f50 Compacted 4@0 + 1@1 files => 23200 bytes
+2026/05/09-13:09:56.452 4f50 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/05/09-13:09:56.646 4f50 Delete type=2 #30
+2026/05/09-13:09:56.646 4f50 Delete type=2 #32
+2026/05/09-13:09:56.646 4f50 Delete type=2 #35
+2026/05/09-13:09:56.646 4f50 Delete type=2 #37
+2026/05/09-13:09:56.646 4f50 Delete type=2 #40

@@ -5,25 +5,34 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "nodemon --exec ts-node src/index.ts",
+    "dev:frontend": "vite",
     "build": "tsc",
-    "chrome:start": "node start-chrome-CDP.js",
-    "test": "ts-node tests/run-tests.ts",
-    "test:cdp": "ts-node tests/run-tests.ts 1"
+    "build:frontend": "vite build",
+    "test": "ts-node tests/run-tests.ts"
   },
-  "keywords": ["bot", "crawler", "facebook", "automation", "loja-do-mecanico"],
+  "keywords": [
+    "bot",
+    "crawler",
+    "facebook",
+    "automation",
+    "loja-do-mecanico"
+  ],
   "author": "ForgeDeals",
   "license": "MIT",
   "dependencies": {
-    "playwright": "^1.40.0",
-    "@supabase/supabase-js": "^2.38.0"
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^17.4.2",
+    "playwright": "^1.40.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "typescript": "^5.8.3",
+    "nodemon": "^3.0.0",
     "ts-node": "^10.9.0",
-    "nodemon": "^3.0.0"
+    "typescript": "^5.8.3"
   },
+  "type": "commonjs",
   "engines": {
     "node": ">=18.0.0"
   }

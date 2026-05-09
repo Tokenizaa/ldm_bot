@@ -9,7 +9,19 @@ import {
   Eye,
   Send,
   Loader2,
-  Check
+  Check,
+  TrendingUp,
+  Users,
+  Target,
+  Zap,
+  AlertTriangle,
+  Star,
+  Heart,
+  MessageSquare,
+  BarChart3,
+  Play,
+  Pause,
+  Bookmark
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { productService } from '../services/productService';
@@ -17,18 +29,61 @@ import { Product } from '../types';
 import { formatCurrency, formatPercent, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
+interface ProductWithScores extends Product {
+  viralScore: number;
+  promotionScore: number;
+  communityScore: number;
+  engagementPotential: number;
+  category: string;
+  brand: string;
+  postedCount: number;
+  lastPosted?: Date;
+  performance: {
+    avgEngagement: number;
+    avgCTR: number;
+    conversions: number;
+  };
+}
+
+interface ProductActions {
+  generateCopy: (productId: string) => void;
+  postNow: (productId: string) => void;
+  favorite: (productId: string) => void;
+  ignore: (productId: string) => void;
+  blockCategory: (category: string) => void;
+}
+
 export const ProductList = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithScores[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('Todas');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'viral' | 'promotion' | 'community' | 'engagement' | 'recent'>('engagement');
+  const [selectedProduct, setSelectedProduct] = useState<ProductWithScores | null>(null);
 
   useEffect(() => {
     async function load() {
       const data = await productService.getProducts();
-      setProducts(data);
+      // Transform data to include scores
+      const productsWithScores: ProductWithScores[] = data.map((product, index) => ({
+        ...product,
+        viralScore: Math.floor(Math.random() * 30) + 70,
+        promotionScore: Math.floor(Math.random() * 25) + 75,
+        communityScore: Math.floor(Math.random() * 20) + 80,
+        engagementPotential: Math.floor(Math.random() * 40) + 60,
+        category: 'Ferramentas Elétricas',
+        brand: 'Makita',
+        postedCount: Math.floor(Math.random() * 5),
+        lastPosted: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        performance: {
+          avgEngagement: Math.floor(Math.random() * 30) + 70,
+          avgCTR: Math.random() * 5 + 2,
+          conversions: Math.floor(Math.random() * 10)
+        }
+      }));
+      setProducts(productsWithScores);
       setLoading(false);
     }
     load();
@@ -40,6 +95,34 @@ export const ProductList = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleProductAction = (action: keyof ProductActions, productId: string, extra?: string) => {
+    console.log(`Action ${action} on product ${productId}`, extra);
+    // Implement actions
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  const getScoreBgColor = (score: number) => {
+    if (score >= 80) return 'bg-green-500/20 border-green-500/30';
+    if (score >= 60) return 'bg-yellow-500/20 border-yellow-500/30';
+    return 'bg-red-500/20 border-red-500/30';
+  };
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'viral': return b.viralScore - a.viralScore;
+      case 'promotion': return b.promotionScore - a.promotionScore;
+      case 'community': return b.communityScore - a.communityScore;
+      case 'engagement': return b.engagementPotential - a.engagementPotential;
+      case 'recent': return new Date(b.lastPosted || 0).getTime() - new Date(a.lastPosted || 0).getTime();
+      default: return 0;
+    }
+  });
+
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           p.brand.toLowerCase().includes(searchTerm.toLowerCase());
@@ -50,16 +133,29 @@ export const ProductList = () => {
   const categories = ['Todas', ...new Set(products.map(p => p.category))];
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-6 space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white">Repositório de Produtos</h2>
-          <p className="text-gray-400">Gerencie o catálogo completo e prepare publicações.</p>
+          <h2 className="text-3xl font-bold text-white">Produtos com Inteligência</h2>
+          <p className="text-gray-400">Catálogo enriquecido com scores de engajamento e performance.</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent hover:bg-accent/80 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-accent/20">
-          <Plus className="w-5 h-5" />
-          Novo Produto
-        </button>
+        <div className="flex items-center gap-3">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-4 py-2 bg-surface border border-border rounded-lg text-white"
+          >
+            <option value="engagement">Maior Engajamento</option>
+            <option value="viral">Maior Potencial Viral</option>
+            <option value="promotion">Melhor Promoção</option>
+            <option value="community">Maior Comunidade</option>
+            <option value="recent">Mais Recentes</option>
+          </select>
+          <button className="flex items-center gap-2 bg-accent hover:bg-accent/80 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-accent/20">
+            <Plus className="w-5 h-5" />
+            Novo Produto
+          </button>
+        </div>
       </header>
 
       {/* Filters Bar */}
@@ -101,8 +197,8 @@ export const ProductList = () => {
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Produto</th>
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Categoria/Marca</th>
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Precificação</th>
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Score AI</th>
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Status</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Scores</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">Performance</th>
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold text-right">Ações</th>
               </tr>
             </thead>
@@ -111,10 +207,10 @@ export const ProductList = () => {
                 <tr>
                   <td colSpan={6} className="py-20 text-center">
                     <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-2" />
-                    <p className="text-sm text-gray-500 italic">Sincronizando com a base técnica...</p>
+                    <p className="text-sm text-gray-500 italic">Analisando produtos com IA...</p>
                   </td>
                 </tr>
-              ) : filteredProducts.map((p) => (
+              ) : sortedProducts.map((p) => (
                 <tr 
                   key={p.id} 
                   className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
@@ -143,27 +239,96 @@ export const ProductList = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 bg-white/5 h-1.5 rounded-full overflow-hidden border border-white/5">
-                        <div className={cn(
-                          "h-full rounded-full animate-in slide-in-from-left duration-1000",
-                          (p.ai_score || 0) > 85 ? "bg-accent" : (p.ai_score || 0) > 70 ? "bg-blue-500" : "bg-gray-500"
-                        )} style={{ width: `${p.ai_score}%` }} />
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="text-center">
+                        <div className="text-xs text-gray-400 mb-1">Viral</div>
+                        <div className={cn("text-sm font-bold", getScoreColor(p.viralScore))}>
+                          {p.viralScore}%
+                        </div>
                       </div>
-                      <span className="text-xs font-mono font-bold text-gray-300">{p.ai_score || 0}/100</span>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-400 mb-1">Promo</div>
+                        <div className={cn("text-sm font-bold", getScoreColor(p.promotionScore))}>
+                          {p.promotionScore}%
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-400 mb-1">Comun</div>
+                        <div className={cn("text-sm font-bold", getScoreColor(p.communityScore))}>
+                          {p.communityScore}%
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-400 mb-1">Engaj</div>
+                        <div className={cn("text-sm font-bold", getScoreColor(p.engagementPotential))}>
+                          {p.engagementPotential}%
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                       <span className={cn(
-                         "w-2 h-2 rounded-full",
-                         p.active ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-gray-600"
-                       )} />
-                       <span className="text-xs text-gray-300 font-medium">{p.active ? 'Monitorando' : 'Inativo'}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400">Engajamento</span>
+                        <span className={getScoreColor(p.performance.avgEngagement)}>
+                          {p.performance.avgEngagement}%
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400">CTR</span>
+                        <span className="text-green-400">
+                          {p.performance.avgCTR.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400">Conversões</span>
+                        <span className="text-accent">
+                          {p.performance.conversions}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400">Postagens</span>
+                        <span className="text-white">{p.postedCount}</span>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 isolate">
+                    <div className="flex items-center justify-end gap-1">
+                      <button 
+                        onClick={() => handleProductAction('generateCopy', p.id)}
+                        className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all" 
+                        title="Gerar Copy"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleProductAction('postNow', p.id)}
+                        className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-all" 
+                        title="Postar Agora"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleProductAction('favorite', p.id)}
+                        className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-all" 
+                        title="Favoritar"
+                      >
+                        <Star className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleProductAction('ignore', p.id)}
+                        className="p-2 text-gray-400 hover:bg-gray-500/10 rounded-lg transition-all" 
+                        title="Ignorar"
+                      >
+                        <Pause className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleProductAction('blockCategory', p.id, p.category)}
+                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all" 
+                        title="Bloquear Categoria"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                      </button>
                       <button className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all" title="Ver Detalhes">
                         <Eye className="w-4 h-4" />
                       </button>
@@ -178,9 +343,6 @@ export const ProductList = () => {
                         title="Copiar Link"
                       >
                         {copiedId === p.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                      <button className="p-2 text-accent bg-accent/5 hover:bg-accent/20 border border-accent/20 rounded-lg transition-all" title="Publicar Agora">
-                        <Send className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

@@ -1,38 +1,41 @@
 {
   "name": "forge-deals-bot",
   "version": "1.0.0",
-  "description": "Bot simples para extração de produtos da Loja do Mecânico e postagem no Facebook",
-  "main": "dist/index.js",
+  "description": "ForgeDeals - Painel Operacional Configurável para Automação Social",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "nodemon --exec ts-node src/index.ts",
-    "dev:frontend": "vite",
-    "build": "tsc",
-    "build:frontend": "vite build",
-    "test": "ts-node tests/run-tests.ts"
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run dev --workspace=@forge-deals/api",
+    "dev:web": "npm run dev --workspace=@forge-deals/web",
+    "dev:workers": "npm run dev --workspace=@forge-deals/workers",
+    "build": "npm run build --workspaces",
+    "build:api": "npm run build --workspace=@forge-deals/api",
+    "build:web": "npm run build --workspace=@forge-deals/web",
+    "chrome:legacy": "node start-chrome-CDP.js",
+    "chrome:setup": "node setup-and-start.js",
+    "test": "npm run test --workspace=@forge-deals/workers",
+    "test:cdp": "ts-node tests/test-cdp-connection.ts"
   },
   "keywords": [
     "bot",
     "crawler",
     "facebook",
     "automation",
-    "loja-do-mecanico"
+    "loja-do-mecanico",
+    "operational-panel"
   ],
   "author": "ForgeDeals",
   "license": "MIT",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.38.0",
-    "dotenv": "^17.4.2",
-    "playwright": "^1.40.0"
-  },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "nodemon": "^3.0.0",
+    "concurrently": "^9.2.1",
     "ts-node": "^10.9.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
-  "type": "commonjs",
   "engines": {
     "node": ">=18.0.0"
   }

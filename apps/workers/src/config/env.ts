@@ -6,7 +6,9 @@ const EnvSchema = z.object({
   SUPABASE_URL: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   LOJA_DO_MECANICO_EMAIL: z.string().min(1).optional(),
-  LOJA_DO_MECANICO_PASSWORD: z.string().min(1).optional()
+  LOJA_DO_MECANICO_PASSWORD: z.string().min(1).optional(),
+  API_PORT: z.string().default('3001'),
+  API_HOST: z.string().default('0.0.0.0')
 });
 
 export type WorkerEnv = z.infer<typeof EnvSchema>;

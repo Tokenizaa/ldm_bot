@@ -12,12 +12,14 @@ export const affiliateLinkService = {
 
   async createLink(link: AffiliateLink): Promise<AffiliateLink> {
     const supabase = getSupabaseAdmin();
-    const product_identity_key = buildProductIdentityKey({
-      sku: (link as AffiliateLink & { sku?: string }).sku,
+    const sku = (link as AffiliateLink & { sku?: string }).sku;
+    const productIdentityInput = {
+      ...(sku ? { sku } : {}),
       brand: link.brand,
       productName: link.product_name,
       category: link.category
-    });
+    };
+    const product_identity_key = buildProductIdentityKey(productIdentityInput);
     if (!product_identity_key) throw new Error('Produto sem identidade suficiente para cadastro');
 
     const { data, error } = await supabase
@@ -36,20 +38,10 @@ export const affiliateLinkService = {
     const currentLink = current as AffiliateLink;
     const priceChange = price - currentLink.current_price;
 
-    const { error: historyError } = await supabase.from('affiliate_price_history').insert({
-      affiliate_link_id: linkId,
-      price,
-      price_change: priceChange
-    } satisfies Partial<AffiliatePriceHistory>);
+    const { error: historyError } = await supabase.from('affiliate_price_history').insert({ affiliate_link_id: linkId, price, price_change: priceChange } satisfies Partial<AffiliatePriceHistory>);
     if (historyError) throw historyError;
 
-    const { error: updateError } = await supabase.from('affiliate_links').update({
-      current_price: price,
-      previous_price: currentLink.current_price,
-      last_checked_at: new Date().toISOString(),
-      last_price_change: new Date().toISOString(),
-      lowest_price: currentLink.lowest_price ? Math.min(currentLink.lowest_price, price) : price
-    }).eq('id', linkId);
+    const { error: updateError } = await supabase.from('affiliate_links').update({ current_price: price, previous_price: currentLink.current_price, last_checked_at: new Date().toISOString(), last_price_change: new Date().toISOString(), lowest_price: currentLink.lowest_price ? Math.min(currentLink.lowest_price, price) : price }).eq('id', linkId);
     if (updateError) throw updateError;
   }
 };

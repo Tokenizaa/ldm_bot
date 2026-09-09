@@ -7,6 +7,10 @@ import { ollamaRoutes } from './routes/ollama.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { monthlyPlanRoutes } from './routes/monthlyPlans.js';
 import { loadEnv } from './config/env.js';
+import { publishDueFacebookPosts } from './services/facebookGroupPlannerService.js';
+
+const PUBLISHER_INTERVAL_MS = Math.max(30_000, Number.parseInt(process.env.FACEBOOK_PUBLISH_INTERVAL_MS ?? '60000', 10) || 60000);
+const PUBLISHER_BATCH_SIZE = Math.max(1, Math.min(20, Number.parseInt(process.env.FACEBOOK_PUBLISH_BATCH_SIZE ?? '5', 10) || 5));
 
 async function main() {
   const env = loadEnv();
@@ -44,6 +48,30 @@ async function main() {
   try {
     await fastify.listen({ port: PORT, host: HOST });
     console.log(`🚀 API rodando em http://${HOST}:${PORT}`);
+
+    let running = false;
+    const runPublisher = async () => {
+      if (running) return;
+      running = true;
+      try {
+        const result = await publishDueFacebookPosts(PUBLISHER_BATCH_SIZE);
+        if (result.attempted > 0) console.log(JSON.stringify({ job: 'publish-facebook-due', ...result }));
+      } catch (error) {
+        fastify.log.error(error, 'Facebook publisher scheduler failed');
+      } finally {
+        running = false;
+      }
+    };
+
+    const publisherTimer = setInterval(runPublisher, PUBLISHER_INTERVAL_MS);
+    publisherTimer.unref();
+    await runPublisher();
+
+    const shutdown = () => {
+      clearInterval(publisherTimer);
+    };
+    process.once('SIGTERM', shutdown);
+    process.once('SIGINT', shutdown);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

@@ -12,9 +12,7 @@ export async function scheduleMonthlyPlanForFacebook(planId: string) {
   if (!plan) throw new Error('Plano mensal não encontrado');
   if (plan.status === 'published') throw new Error('Plano já publicado');
 
-  const { data: posts, error } = await supabase.from('posts')
-    .select('id,group_id,group_name,content,link,scheduled_at,affiliate_link_id,plan_id,status,slot_index')
-    .eq('plan_id', planId).order('slot_index', { ascending: true });
+  const { data: posts, error } = await supabase.from('posts').select('id,group_id,group_name,content,link,scheduled_at,affiliate_link_id,plan_id,status,slot_index').eq('plan_id', planId).order('slot_index');
   if (error) throw error;
   const ready = (posts ?? []).filter((p) => p.affiliate_link_id && p.content?.trim() && p.scheduled_at);
   if (!ready.length) throw new Error('Nenhum post pronto para agendamento');
@@ -27,10 +25,6 @@ export async function scheduleMonthlyPlanForFacebook(planId: string) {
   let scheduled = 0;
   for (const post of ready) {
     if (post.status === 'published') continue;
-    const { error: updateError } = await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.id);
-    if (updateError) throw updateError;
-
-    const { data: existing } = await supabase.from('publication_history').select('id,status').eq('post_id', post.id).limit(1).maybeSingle();
     const payload = {
       affiliate_link_id: post.affiliate_link_id,
       product_identity_key: identityById.get(post.affiliate_link_id) ?? `affiliate:${post.affiliate_link_id}`,
@@ -41,13 +35,14 @@ export async function scheduleMonthlyPlanForFacebook(planId: string) {
       status: 'scheduled',
       content_hash: hashContent(post.content)
     };
-    if (existing) {
-      const { error: historyError } = await supabase.from('publication_history').update(payload).eq('id', existing.id);
-      if (historyError) throw historyError;
-    } else {
-      const { error: historyError } = await supabase.from('publication_history').insert(payload);
-      if (historyError) throw historyError;
-    }
+    const { data: existing, error: existingError } = await supabase.from('publication_history').select('id,status').eq('post_id', post.id).maybeSingle();
+    if (existingError) throw existingError;
+    const { error: historyError } = existing
+      ? await supabase.from('publication_history').update(payload).eq('id', existing.id)
+      : await supabase.from('publication_history').insert(payload);
+    if (historyError) throw historyError;
+    const { error: updateError } = await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.id).neq('status', 'published');
+    if (updateError) throw updateError;
     scheduled++;
   }
 
@@ -58,10 +53,7 @@ export async function scheduleMonthlyPlanForFacebook(planId: string) {
 
 export async function publishDueFacebookPosts(limit = 5) {
   const supabase = getSupabaseAdmin();
-  const { data: posts, error } = await supabase.from('posts')
-    .select('id,group_name,content,link,image_url,scheduled_at,plan_id')
-    .eq('status', 'scheduled').lte('scheduled_at', new Date().toISOString())
-    .order('scheduled_at', { ascending: true }).limit(limit);
+  const { data: posts, error } = await supabase.from('posts').select('id,group_name,content,link,image_url,scheduled_at,plan_id,attempts').eq('status', 'scheduled').lte('scheduled_at', new Date().toISOString()).order('scheduled_at').limit(Math.max(1, Math.min(limit, 20)));
   if (error) throw error;
   if (!posts?.length) return { attempted: 0, published: 0, failed: 0, errors: [] };
 
@@ -69,15 +61,17 @@ export async function publishDueFacebookPosts(limit = 5) {
   let published = 0;
   const errors: Array<{ postId: string; error: string }> = [];
   for (const post of posts) {
+    const claim = await supabase.from('posts').update({ status: 'publishing', attempts: (post.attempts ?? 0) + 1 }).eq('id', post.id).eq('status', 'scheduled').select('id').maybeSingle();
+    if (claim.error) throw claim.error;
+    if (!claim.data) continue;
+
     const publisher = new FacebookPublisher(config);
     try {
-      await supabase.from('posts').update({ status: 'publishing', attempts: (post as any).attempts ? (post as any).attempts + 1 : 1 }).eq('id', post.id);
       await publisher.initialize();
       const result = await publisher.publishPost({ text: post.content, link: post.link ?? '', imageUrl: post.image_url ?? undefined }, post.group_name);
       if (!result.success) throw new Error(result.error ?? 'Falha na publicação Facebook');
-
       const publishedAt = result.publishedAt ?? new Date().toISOString();
-      const { error: updateError } = await supabase.from('posts').update({ status: 'published', published_at: publishedAt, facebook_post_id: result.postId ?? null, error_message: null }).eq('id', post.id);
+      const { error: updateError } = await supabase.from('posts').update({ status: 'published', published_at: publishedAt, facebook_post_id: result.postId ?? null, error_message: null }).eq('id', post.id).eq('status', 'publishing');
       if (updateError) throw updateError;
       const { error: historyError } = await supabase.from('publication_history').update({ status: 'published', published_at: publishedAt }).eq('post_id', post.id);
       if (historyError) throw historyError;
@@ -85,7 +79,7 @@ export async function publishDueFacebookPosts(limit = 5) {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erro desconhecido';
       errors.push({ postId: post.id, error: message });
-      await supabase.from('posts').update({ status: 'failed', error_message: message }).eq('id', post.id);
+      await supabase.from('posts').update({ status: 'failed', error_message: message }).eq('id', post.id).eq('status', 'publishing');
       await supabase.from('publication_history').update({ status: 'failed' }).eq('post_id', post.id);
     } finally {
       await publisher.cleanup().catch(() => undefined);

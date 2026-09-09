@@ -5,3 +5,4 @@ export { ProductScorer, ScoredProduct } from './planner/productScore.js';
 export * from './planner/antiRepetition.js';
 export * from './planner/categoryRotation.js';
 export * from './planner/monthlyPlan.js';
+export * from './planner/productIdentity.js';

@@ -4,6 +4,8 @@ import { loadConfig } from '../config/configStore.js';
 import { FacebookPublisher } from './facebookPublisher.js';
 
 const hashContent = (content: string) => createHash('sha256').update(content.trim()).digest('hex');
+const MAX_ATTEMPTS = 3;
+const STALE_PUBLISHING_MINUTES = 15;
 
 export async function scheduleMonthlyPlanForFacebook(planId: string) {
   const supabase = getSupabaseAdmin();
@@ -41,7 +43,7 @@ export async function scheduleMonthlyPlanForFacebook(planId: string) {
       ? await supabase.from('publication_history').update(payload).eq('id', existing.id)
       : await supabase.from('publication_history').insert(payload);
     if (historyError) throw historyError;
-    const { error: updateError } = await supabase.from('posts').update({ status: 'scheduled' }).eq('id', post.id).neq('status', 'published');
+    const { error: updateError } = await supabase.from('posts').update({ status: 'scheduled', error_message: null }).eq('id', post.id).neq('status', 'published');
     if (updateError) throw updateError;
     scheduled++;
   }
@@ -51,9 +53,31 @@ export async function scheduleMonthlyPlanForFacebook(planId: string) {
   return { planId, scheduled, totalReady: ready.length, status: 'scheduled' };
 }
 
+export async function recoverStaleFacebookPublishing() {
+  const supabase = getSupabaseAdmin();
+  const cutoff = new Date(Date.now() - STALE_PUBLISHING_MINUTES * 60_000).toISOString();
+  const { data, error } = await supabase.from('posts').select('id,attempts').eq('status', 'publishing').lt('publishing_started_at', cutoff);
+  if (error) throw error;
+  if (!data?.length) return { recovered: 0, exhausted: 0 };
+
+  let recovered = 0;
+  let exhausted = 0;
+  for (const post of data) {
+    const attempts = post.attempts ?? 0;
+    const nextStatus = attempts >= MAX_ATTEMPTS ? 'failed' : 'scheduled';
+    const message = attempts >= MAX_ATTEMPTS ? 'Limite de tentativas excedido após recuperação de publicação interrompida' : 'Publicação recuperada após execução interrompida';
+    const { error: updateError } = await supabase.from('posts').update({ status: nextStatus, error_message: message, publishing_started_at: null }).eq('id', post.id).eq('status', 'publishing');
+    if (updateError) throw updateError;
+    await supabase.from('publication_history').update({ status: nextStatus === 'failed' ? 'failed' : 'scheduled' }).eq('post_id', post.id);
+    if (nextStatus === 'failed') exhausted++; else recovered++;
+  }
+  return { recovered, exhausted };
+}
+
 export async function publishDueFacebookPosts(limit = 5) {
   const supabase = getSupabaseAdmin();
-  const { data: posts, error } = await supabase.from('posts').select('id,group_name,content,link,image_url,scheduled_at,plan_id,attempts').eq('status', 'scheduled').lte('scheduled_at', new Date().toISOString()).order('scheduled_at').limit(Math.max(1, Math.min(limit, 20)));
+  await recoverStaleFacebookPublishing();
+  const { data: posts, error } = await supabase.from('posts').select('id,group_name,content,link,image_url,scheduled_at,plan_id,attempts').eq('status', 'scheduled').lte('scheduled_at', new Date().toISOString()).lt('attempts', MAX_ATTEMPTS).order('scheduled_at').limit(Math.max(1, Math.min(limit, 20)));
   if (error) throw error;
   if (!posts?.length) return { attempted: 0, published: 0, failed: 0, errors: [] };
 
@@ -61,7 +85,7 @@ export async function publishDueFacebookPosts(limit = 5) {
   let published = 0;
   const errors: Array<{ postId: string; error: string }> = [];
   for (const post of posts) {
-    const claim = await supabase.from('posts').update({ status: 'publishing', attempts: (post.attempts ?? 0) + 1 }).eq('id', post.id).eq('status', 'scheduled').select('id').maybeSingle();
+    const claim = await supabase.from('posts').update({ status: 'publishing', attempts: (post.attempts ?? 0) + 1, publishing_started_at: new Date().toISOString(), last_attempt_at: new Date().toISOString() }).eq('id', post.id).eq('status', 'scheduled').select('id').maybeSingle();
     if (claim.error) throw claim.error;
     if (!claim.data) continue;
 
@@ -71,7 +95,7 @@ export async function publishDueFacebookPosts(limit = 5) {
       const result = await publisher.publishPost({ text: post.content, link: post.link ?? '', imageUrl: post.image_url ?? undefined }, post.group_name);
       if (!result.success) throw new Error(result.error ?? 'Falha na publicação Facebook');
       const publishedAt = result.publishedAt ?? new Date().toISOString();
-      const { error: updateError } = await supabase.from('posts').update({ status: 'published', published_at: publishedAt, facebook_post_id: result.postId ?? null, error_message: null }).eq('id', post.id).eq('status', 'publishing');
+      const { error: updateError } = await supabase.from('posts').update({ status: 'published', published_at: publishedAt, facebook_post_id: result.postId ?? null, error_message: null, publishing_started_at: null }).eq('id', post.id).eq('status', 'publishing');
       if (updateError) throw updateError;
       const { error: historyError } = await supabase.from('publication_history').update({ status: 'published', published_at: publishedAt }).eq('post_id', post.id);
       if (historyError) throw historyError;
@@ -79,12 +103,13 @@ export async function publishDueFacebookPosts(limit = 5) {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erro desconhecido';
       errors.push({ postId: post.id, error: message });
-      await supabase.from('posts').update({ status: 'failed', error_message: message }).eq('id', post.id).eq('status', 'publishing');
-      await supabase.from('publication_history').update({ status: 'failed' }).eq('post_id', post.id);
+      const nextStatus = (post.attempts ?? 0) + 1 >= MAX_ATTEMPTS ? 'failed' : 'scheduled';
+      await supabase.from('posts').update({ status: nextStatus, error_message: message, publishing_started_at: null }).eq('id', post.id).eq('status', 'publishing');
+      await supabase.from('publication_history').update({ status: nextStatus === 'failed' ? 'failed' : 'scheduled' }).eq('post_id', post.id);
     } finally {
       await publisher.cleanup().catch(() => undefined);
     }
   }
 
-  return { attempted: posts.length, published, failed: errors.length, errors };
+  return { attempted: posts.length, published, failed: errors.filter((e) => e.postId).length, errors };
 }

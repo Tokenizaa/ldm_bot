@@ -1,7 +1,6 @@
 import { getSupabaseAdmin } from './supabaseAdmin.js';
-import { buildProductIdentityKey } from '@forge-deals/shared';
+import { buildProductIdentityKey, MONTHLY_PLAN_TOTAL_POSTS } from '@forge-deals/shared';
 import { generateProductCopy } from './nvidiaService.js';
-import { MONTHLY_PLAN_TOTAL_POSTS } from '@forge-deals/shared/planner/monthlyPlan.js';
 
 const MAX_CONCURRENT_UPDATES = 10;
 

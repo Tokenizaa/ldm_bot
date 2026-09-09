@@ -3,90 +3,65 @@
 **Status:** Fase 2 em execução  
 **Objetivo:** simplificar o LDM Bot existente, preservar o que já funciona e corrigir somente o necessário para chegar a um fluxo confiável de planejamento e agendamento de posts no grupo do Facebook.
 
-## Objetivo funcional
-
-O sistema deve conseguir:
-
-1. coletar produtos/links de afiliado da Loja do Mecânico;
-2. selecionar uma quantidade diversificada de produtos;
-3. gerar os textos usando NVIDIA;
-4. montar um plano de 30 dias com 5 posts por dia (150 posts);
-5. agendar os posts diretamente no Facebook usando Playwright/CDP;
-6. confirmar no Facebook que cada post realmente ficou agendado.
-
-Horários padrão: **09:00, 11:00, 14:00, 17:00 e 20:00**, timezone `America/Sao_Paulo`.
-
-## Princípios
-
-- **Não reescrever do zero.** O `ldm_bot` atual é a base da refatoração.
-- Preservar código funcional antes de substituir.
-- Remover complexidade que não entrega valor real.
-- Não introduzir Redis, BullMQ ou workers separados sem necessidade comprovada.
-- PostgreSQL/Supabase é a fonte de verdade.
-- API e Web permanecem separados.
-- O código da API não pode importar código de `workers`.
-- Facebook é automatizado exclusivamente pelo fluxo real documentado em `docs/FACEBOOK_SCHEDULING_FLOW.md`.
-- Nunca registrar sucesso de agendamento sem confirmação real no Facebook.
-- Não usar mocks/fakes/dados hardcoded para simular sucesso em produção.
-- Não armazenar senhas, cookies, tokens ou chaves em documentação/logs.
-
-## Fases
-
-### Fase 1 — Auditoria e baseline
+## Fase 1 — Auditoria e baseline
 **Status: CONCLUÍDA em 2026-09-09.**
 
 Saída: `docs/REFACTOR_BASELINE.md`.
 
-Principais conclusões: a Web deve ser preservada; a API precisa ser desacoplada de `workers`; Workers/Redis/BullMQ/ioredis são candidatos fortes à remoção; crawler e Facebook devem ser preservados e simplificados.
-
-### Fase 2 — Simplificação da arquitetura
+## Fase 2 — Simplificação da arquitetura
 **Status: EM EXECUÇÃO.**
 
-Objetivo: reduzir a complexidade mantendo o comportamento útil.
+### Concluído nesta etapa
 
-#### Concluído
+- [x] Configuração própria da API (`apps/api/src/config/env.ts`)
+- [x] Serviço de afiliados migrado para a API
+- [x] Dependência API → `workers/src/config/env` removida
+- [x] Dependência API → `workers/src/services/affiliateLinkService` removida
+- [x] `bullmq` removido das dependências da API
+- [x] `ioredis` removido das dependências da API
+- [x] Configuração de browser/CDP iniciada dentro da API
+- [x] Conector CDP simplificado dentro da API
+- [x] Monitor de sessão necessário para o fluxo migrado para a API
+- [x] `CrawlerService` passou a usar as utilidades de browser da API
+- [x] Dependência funcional do crawler em código de `workers` removida
 
-- [x] Criar configuração própria da API em `apps/api/src/config/env.ts`.
-- [x] Remover import `apps/api → workers/src/config/env`.
-- [x] Migrar `affiliateLinkService` para `apps/api/src/services/affiliateLinkService.ts`.
-- [x] Remover import `apps/api → workers/src/services/affiliateLinkService`.
-- [x] Remover `bullmq` e `ioredis` das dependências da API, que não os utiliza diretamente.
-- [x] Corrigir o cast `as unknown as AffiliateLink[]` do crawler, preservando os produtos originais após a seleção.
+### Pendente nesta fase
 
-#### Em andamento
+- [ ] Auditar e migrar somente responsabilidades ainda necessárias de `apps/workers`
+- [ ] Migrar/validar o crawler legado antes de removê-lo definitivamente
+- [ ] Migrar o publisher Facebook legado somente se alguma capacidade útil ainda não existir na API
+- [ ] Revisar `packages/shared` e remover apenas contratos que deixarem de ser usados
+- [ ] Atualizar `package-lock.json` para refletir a remoção das dependências
+- [ ] Corrigir eventuais erros de TypeScript/build após as migrações
+- [ ] Remover `apps/workers` somente após provar que não há responsabilidade funcional restante
+- [ ] Validar que não existe nenhum import API → Workers
 
-- [ ] Auditar os processors internos de `apps/workers` antes de apagar o processo.
-- [ ] Migrar qualquer responsabilidade funcional restante dos Workers.
-- [ ] Remover Redis/BullMQ/ioredis do workspace Workers quando não houver uso funcional restante.
-- [ ] Remover `apps/workers` quando estiver comprovadamente sem responsabilidade.
-- [ ] Reduzir `packages/shared` ao código realmente compartilhado.
-- [ ] Atualizar lockfile após a estabilização das dependências.
-- [ ] Validar build/typecheck da API e Web após as mudanças.
-
-**Critério de conclusão:** Web e API funcionam independentemente e não existe cross-import proibido.
-
-### Fase 3 — Fluxo de negócio e persistência
-**Status: PENDENTE.**
-
-Objetivo: tornar o planejamento mensal determinístico e idempotente.
-
-Implementar/corrigir:
+### Arquitetura alvo
 
 ```text
-Coleta → Seleção → Geração NVIDIA → Plano mensal → Agendamento
+web/       React + Vite
+api/       Fastify + TypeScript + Playwright
+supabase/  PostgreSQL/migrations
 ```
 
-Requisitos: 30 × 5 = 150 slots; diversidade de produtos; nenhuma duplicação silenciosa; estados persistidos; reexecução idempotente; retomada manual.
+Redis/BullMQ não fazem parte da arquitetura alvo neste momento.
 
-### Fase 4 — Facebook Scheduler
+## Fase 3 — Fluxo de negócio e persistência
 **Status: PENDENTE.**
 
-Usar `docs/FACEBOOK_SCHEDULING_FLOW.md` como contrato operacional e confirmar cada agendamento no Facebook antes de persistir `scheduled`.
+Coleta → Seleção → Geração NVIDIA → Plano mensal → Agendamento.
 
-### Fase 5 — Validação e limpeza final
+30 dias × 5 horários = 150 posts.
+
+## Fase 4 — Facebook Scheduler
 **Status: PENDENTE.**
 
-Build, typecheck, lint, testes, crawler, NVIDIA, plano mensal, Facebook, idempotência, revisão de env/logs e limpeza final.
+Usar `docs/FACEBOOK_SCHEDULING_FLOW.md` como contrato operacional.
+
+## Fase 5 — Validação e limpeza final
+**Status: PENDENTE.**
+
+Build, typecheck, testes, crawler, NVIDIA, planejamento, Facebook e idempotência.
 
 ## Regra de execução
 

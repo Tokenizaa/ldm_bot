@@ -1,0 +1,4 @@
+-- Historical migration marker.
+-- The reproducible schema is reconstructed by the final versioned baseline
+-- `20260909180000_reconstruct_current_schema.sql`.
+-- This version is retained because it is already recorded as applied remotely.

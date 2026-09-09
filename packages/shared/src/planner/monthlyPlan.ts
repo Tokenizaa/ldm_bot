@@ -1,5 +1,3 @@
-import type { Product } from '@forge-deals/shared/types';
-
 export const MONTHLY_POST_TIMES = ['09:00', '11:00', '14:00', '17:00', '20:00'] as const;
 export const MONTHLY_POSTS_PER_DAY = MONTHLY_POST_TIMES.length;
 export const MONTHLY_PLAN_DAYS = 30;
@@ -13,22 +11,34 @@ export interface MonthlyPlanSlot {
   dayOffset: number;
   scheduledAt: string;
   postType: MonthlyPostType;
-  product: Product;
 }
 
 /**
- * Cria os 150 horários do plano. A seleção dos produtos acontece separadamente,
- * permitindo aplicar score e histórico sem misturar regras de calendário.
+ * Brazil/Sao_Paulo is UTC-03:00 for the current business rule (no DST).
+ * Build timestamps explicitly in UTC instead of relying on the API server's
+ * local timezone, which could differ between development and production.
  */
-export function buildMonthlySlots(periodStart: Date): Array<Omit<MonthlyPlanSlot, 'product'>> {
-  const slots: Array<Omit<MonthlyPlanSlot, 'product'>> = [];
+export function buildMonthlySlots(periodStart: Date): MonthlyPlanSlot[] {
+  const slots: MonthlyPlanSlot[] = [];
+  const startYear = periodStart.getUTCFullYear();
+  const startMonth = periodStart.getUTCMonth();
+  const startDay = periodStart.getUTCDate();
 
   for (let dayOffset = 0; dayOffset < MONTHLY_PLAN_DAYS; dayOffset += 1) {
+    const date = new Date(Date.UTC(startYear, startMonth, startDay + dayOffset));
+
     for (let slot = 0; slot < MONTHLY_POSTS_PER_DAY; slot += 1) {
       const [hour, minute] = MONTHLY_POST_TIMES[slot].split(':').map(Number);
-      const scheduledAt = new Date(periodStart);
-      scheduledAt.setDate(scheduledAt.getDate() + dayOffset);
-      scheduledAt.setHours(hour, minute, 0, 0);
+      // Sao Paulo 09:00 local == 12:00 UTC under the project's fixed UTC-03 rule.
+      const scheduledAt = new Date(Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        hour + 3,
+        minute,
+        0,
+        0
+      ));
 
       slots.push({
         slotIndex: dayOffset * MONTHLY_POSTS_PER_DAY + slot + 1,

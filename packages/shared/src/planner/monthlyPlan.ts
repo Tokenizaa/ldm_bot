@@ -28,26 +28,14 @@ export function buildMonthlySlots(periodStart: Date): MonthlyPlanSlot[] {
     const date = new Date(Date.UTC(startYear, startMonth, startDay + dayOffset));
 
     for (let slot = 0; slot < MONTHLY_POSTS_PER_DAY; slot += 1) {
-      const [hour, minute] = MONTHLY_POST_TIMES[slot].split(':').map(Number);
+      const time = MONTHLY_POST_TIMES[slot];
+      if (!time) throw new Error(`Horário de slot inválido no índice ${slot}`);
+      const [hourValue, minuteValue] = time.split(':').map(Number);
+      if (hourValue === undefined || minuteValue === undefined) throw new Error(`Horário de slot inválido: ${time}`);
       // Sao Paulo 09:00 local == 12:00 UTC under the project's fixed UTC-03 rule.
-      const scheduledAt = new Date(Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        hour + 3,
-        minute,
-        0,
-        0
-      ));
-
-      slots.push({
-        slotIndex: dayOffset * MONTHLY_POSTS_PER_DAY + slot + 1,
-        dayOffset,
-        scheduledAt: scheduledAt.toISOString(),
-        postType: 'promotion'
-      });
+      const scheduledAt = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), hourValue + 3, minuteValue, 0, 0));
+      slots.push({ slotIndex: dayOffset * MONTHLY_POSTS_PER_DAY + slot + 1, dayOffset, scheduledAt: scheduledAt.toISOString(), postType: 'promotion' });
     }
   }
-
   return slots;
 }

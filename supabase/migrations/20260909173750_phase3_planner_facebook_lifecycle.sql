@@ -1,0 +1,3 @@
+-- Historical migration marker.
+-- Reproducible final schema is captured by the versioned baseline at 18:00.
+-- This version is already recorded as applied on the remote project.

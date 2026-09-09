@@ -1,4 +1,4 @@
-import type { SystemConfig } from '../../web/src/types/config';
+import type { SystemConfig } from '@forge-deals/shared/types/config';
 
 export class OllamaService {
   private baseUrl: string;

@@ -1,11 +1,11 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
-import type { SystemConfig } from '../../web/src/types/config';
+import type { SystemConfig } from '@forge-deals/shared/types/config';
 import type { AffiliateLink } from '@forge-deals/shared/types';
-import { ProductScorer } from '../../web/src/planner/productScore';
-import { AntiRepetition } from '../../web/src/planner/antiRepetition';
-import { CategoryRotation, CATEGORIES } from '../../web/src/planner/categoryRotation';
-import { getSupabaseAdmin } from './supabaseAdmin';
-import { affiliateLinkService } from '../../workers/src/services/affiliateLinkService';
+import { ProductScorer } from '@forge-deals/shared/planner/productScore';
+import { AntiRepetition } from '@forge-deals/shared/planner/antiRepetition';
+import { CategoryRotation, CATEGORIES } from '@forge-deals/shared/planner/categoryRotation';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
+import { affiliateLinkService } from '../../../workers/src/services/affiliateLinkService.js';
 
 // Interfaces from worker crawler
 interface ChromeConnection {
@@ -43,7 +43,7 @@ export class CrawlerService {
       throw new Error('Nenhum contexto encontrado no Chrome conectado.');
     }
 
-    const context = contexts[0];
+    const context = contexts[0]!;
     
     this.connection = {
       browser,
@@ -106,7 +106,7 @@ export class CrawlerService {
   async extractProductsFromCategory(categoryUrl?: string): Promise<AffiliateLink[]> {
     if (!this.page) throw new Error('Page not initialized');
 
-    const url = categoryUrl || this.config.crawler.activeCategories[0]?.url || CATEGORIES[0].url;
+    const url = categoryUrl || this.config.crawler.activeCategories[0]?.url || CATEGORIES[0]!.url;
     const products: AffiliateLink[] = [];
 
     await this.page.goto(url, {
@@ -244,7 +244,7 @@ export class CrawlerService {
       // Apply anti-repetition
       const availableProducts = this.antiRepetition.filterAvailableProducts(
         filteredProducts.map(p => ({ id: p.affiliate_url, categoryId: p.category }))
-      );
+      ) as unknown as AffiliateLink[];
 
       // Save to database
       if (availableProducts.length > 0) {

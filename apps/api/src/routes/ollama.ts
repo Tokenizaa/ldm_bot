@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { OllamaService } from '../services/ollamaService';
-import { loadConfig } from '../config/configStore';
+import { OllamaService } from '../services/ollamaService.js';
+import { loadConfig } from '../config/configStore.js';
 
 const generateSchema = z.object({
   product: z.object({

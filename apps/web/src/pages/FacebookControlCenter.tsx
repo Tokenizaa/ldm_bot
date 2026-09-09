@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Facebook, 
   Users, 
   MessageSquare, 
   TrendingUp, 
@@ -24,8 +23,10 @@ import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useConfig } from '../context/ConfigContext';
 import { api } from '../lib/api';
+import type { FacebookConfig as PanelFacebookConfig } from '@forge-deals/shared/types/config';
+import { DEFAULT_CONFIG } from '@forge-deals/shared/types/config';
 
-interface FacebookConfig {
+interface FacebookConfig extends PanelFacebookConfig {
   postingFrequency: {
     postsPerDay: number;
     minInterval: number; // minutes
@@ -75,7 +76,8 @@ export const FacebookControlCenter = () => {
   const [saving, setSaving] = useState(false);
 
   // Initialize local config state from global config
-  const [localConfig, setLocalConfig] = useState<FacebookConfig>(() => config?.facebook || {
+  const [localConfig, setLocalConfig] = useState<FacebookConfig>(() => ({
+    ...DEFAULT_CONFIG.facebook,
     postingFrequency: {
       postsPerDay: 10,
       minInterval: 30,
@@ -94,13 +96,14 @@ export const FacebookControlCenter = () => {
       mouseMovement: true,
       cooldown: 15,
       randomization: 75
-    }
-  });
+    },
+    ...(config?.facebook ?? {})
+  }));
 
   // Sync local config when global config changes
   useEffect(() => {
     if (config?.facebook) {
-      setLocalConfig(config.facebook);
+      setLocalConfig(prev => ({ ...prev, ...config.facebook }));
     }
   }, [config]);
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Chrome, 
-  Facebook, 
+  Monitor, 
+  Globe, 
   Bot, 
   Database, 
   Activity,
@@ -221,12 +221,12 @@ export const Dashboard = () => {
         <StatusCard
           title="Chrome"
           status={systemStatus.chrome}
-          icon={<Chrome className="w-5 h-5" />}
+          icon={<Monitor className="w-5 h-5" />}
         />
         <StatusCard
           title="Facebook"
           status={systemStatus.facebook}
-          icon={<Facebook className="w-5 h-5" />}
+          icon={<Globe className="w-5 h-5" />}
         />
         <StatusCard
           title="Ollama"
@@ -382,14 +382,14 @@ export const Dashboard = () => {
               onClick={() => handleQuickAction('validate-facebook')}
               className="w-full premium-button px-4 py-3 flex items-center justify-center gap-2"
             >
-              <Facebook className="w-4 h-4" />
+              <Globe className="w-4 h-4" />
               Validar Facebook
             </button>
             <button
               onClick={() => handleQuickAction('open-chrome')}
               className="w-full premium-button px-4 py-3 flex items-center justify-center gap-2"
             >
-              <Chrome className="w-4 h-4" />
+              <Monitor className="w-4 h-4" />
               Abrir Chrome
             </button>
           </div>

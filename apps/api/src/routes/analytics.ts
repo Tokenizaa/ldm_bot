@@ -1,9 +1,10 @@
 import { FastifyInstance } from 'fastify';
-import { getSupabaseAdmin } from '../services/supabaseAdmin';
+import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
 
 export async function analyticsRoutes(fastify: FastifyInstance) {
   // GET /api/analytics/overview - Dashboard overview stats
   fastify.get('/analytics/overview', async () => {
+    try {
     const supabase = getSupabaseAdmin();
     
     // Total products
@@ -79,10 +80,17 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
         recentOpportunities: opportunities || []
       }
     };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
   });
 
   // GET /api/analytics/products - Product analytics
   fastify.get('/analytics/products', async () => {
+    try {
     const supabase = getSupabaseAdmin();
     
     const { data: products } = await supabase
@@ -137,10 +145,17 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
         categoryFrequency: Object.entries(catFreq).map(([name, count]) => ({ name, count }))
       }
     };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
   });
 
   // GET /api/analytics/operational - Operational metrics
   fastify.get('/analytics/operational', async () => {
+    try {
     const supabase = getSupabaseAdmin();
     
     // Crawler logs (if table exists)
@@ -175,5 +190,11 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
         riskMetrics
       }
     };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
   });
 }

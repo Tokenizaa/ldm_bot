@@ -62,7 +62,7 @@ ldm_bot/
 ├── 📄 package.json                   # Dependências e scripts
 ├── 📄 .env.example                  # Variáveis de ambiente exemplo
 ├── 📄 start-chrome-CDP.js          # Startup Chrome CDP
-├── 📄 database-schema.sql            # Schema Supabase
+├── 📄 supabase-migration.sql           # Schema Supabase (operacional)
 ├── 📄 tsconfig.json                 # Config TypeScript
 ├── 📄 .gitignore                    # Ignorar arquivos
 └── 📄 README.md                     # Documentação principal

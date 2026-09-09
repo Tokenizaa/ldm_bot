@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { FacebookPublisher } from '../services/facebookPublisher';
-import { loadConfig } from '../config/configStore';
+import { FacebookPublisher } from '../services/facebookPublisher.js';
+import { loadConfig } from '../config/configStore.js';
 
 const publishSchema = z.object({
   content: z.object({

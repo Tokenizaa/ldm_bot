@@ -3,6 +3,7 @@ import { Save, RefreshCw, Bot, Clock, Package, Brain, Calendar, Settings as Sett
 import { useConfig } from '../context/ConfigContext';
 import { api } from '../lib/api';
 import { cn } from '../lib/utils';
+import type { SystemConfig } from '@forge-deals/shared/types/config';
 
 export const Settings = () => {
   const { config, update, loading, refresh } = useConfig();
@@ -18,8 +19,8 @@ export const Settings = () => {
     );
   }
 
-  const updateSection = (section: keyof typeof config, updater: (prev: any) => any) => {
-    update({ [section]: updater(config[section]) } as any);
+  const updateSection = <K extends keyof SystemConfig>(section: K, updater: (prev: SystemConfig[K]) => SystemConfig[K]) => {
+    update({ [section]: updater(config[section]) } as Partial<SystemConfig>);
   };
 
   const handleSave = async () => {
@@ -102,7 +103,7 @@ export const Settings = () => {
                 <label className="text-sm text-gray-400 mb-2 block">Log Level</label>
                 <select
                   value={config.system.logLevel}
-                  onChange={(e) => updateSection('system', prev => ({ ...prev, logLevel: e.target.value }))}
+                  onChange={(e) => updateSection('system', prev => ({ ...prev, logLevel: e.target.value as SystemConfig['system']['logLevel'] }))}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
                 >
                   <option value="debug">Debug</option>
@@ -175,7 +176,7 @@ export const Settings = () => {
                 <label className="text-sm text-gray-400 mb-2 block">Modo</label>
                 <select
                   value={config.facebook.mode}
-                  onChange={(e) => updateSection('facebook', prev => ({ ...prev, mode: e.target.value }))}
+                  onChange={(e) => updateSection('facebook', prev => ({ ...prev, mode: e.target.value as SystemConfig['facebook']['mode'] }))}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
                 >
                   <option value="safe">Seguro</option>
@@ -324,7 +325,7 @@ export const Settings = () => {
                 <label className="text-sm text-gray-400 mb-2 block">Estilo da Copy</label>
                 <select
                   value={config.ollama.copyStyle}
-                  onChange={(e) => updateSection('ollama', prev => ({ ...prev, copyStyle: e.target.value }))}
+                  onChange={(e) => updateSection('ollama', prev => ({ ...prev, copyStyle: e.target.value as SystemConfig['ollama']['copyStyle'] }))}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
                 >
                   <option value="casual">Casual</option>
@@ -337,7 +338,7 @@ export const Settings = () => {
                 <label className="text-sm text-gray-400 mb-2 block">Tom da Escrita</label>
                 <select
                   value={config.ollama.writingTone}
-                  onChange={(e) => updateSection('ollama', prev => ({ ...prev, writingTone: e.target.value }))}
+                  onChange={(e) => updateSection('ollama', prev => ({ ...prev, writingTone: e.target.value as SystemConfig['ollama']['writingTone'] }))}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
                 >
                   <option value="direct">Direto</option>
@@ -484,6 +485,7 @@ export const Settings = () => {
                   value={config.planning.educationalPosts}
                   onChange={(e) => updateSection('planning', prev => ({ ...prev, educationalPosts: parseInt(e.target.value) }))}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
+                />
                 </div>
               <div>
                 <label className="text-sm text-gray-400 mb-2 block">Posts Engajamento</label>
@@ -522,7 +524,7 @@ export const Settings = () => {
                 <label className="text-sm text-gray-400 mb-2 block">Estratégia de Rotação</label>
                 <select
                   value={config.planning.rotationStrategy}
-                  onChange={(e) => updateSection('planning', prev => ({ ...prev, rotationStrategy: e.target.value }))}
+                  onChange={(e) => updateSection('planning', prev => ({ ...prev, rotationStrategy: e.target.value as SystemConfig['planning']['rotationStrategy'] }))}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-white"
                 >
                   <option value="balanced">Balanceado</option>

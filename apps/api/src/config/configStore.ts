@@ -1,6 +1,6 @@
-import { getSupabaseAdmin } from '../services/supabaseAdmin';
-import type { SystemConfig } from '../../web/src/types/config';
-import { DEFAULT_CONFIG } from '../../web/src/types/config';
+import { getSupabaseAdmin } from '../services/supabaseAdmin.js';
+import type { SystemConfig } from '@forge-deals/shared/types/config';
+import { DEFAULT_CONFIG } from '@forge-deals/shared/types/config';
 
 const CONFIG_TABLE = 'system_config';
 const CONFIG_KEY = 'main';

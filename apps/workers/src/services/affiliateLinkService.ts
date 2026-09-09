@@ -1,5 +1,5 @@
 import type { AffiliateLink, AffiliatePriceHistory } from '@forge-deals/shared/types';
-import { getSupabaseAdmin } from './supabaseAdmin';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
 
 export const affiliateLinkService = {
   async findByAffiliateUrl(affiliateUrl: string): Promise<AffiliateLink | null> {

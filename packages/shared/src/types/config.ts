@@ -24,6 +24,8 @@ export interface OllamaConfig {
 }
 
 export interface CrawlerConfig {
+  email?: string;
+  password?: string;
   activeCategories: Array<{
     id: string;
     name: string;
@@ -55,6 +57,7 @@ export interface SystemConfig {
     logLevel: 'debug' | 'info' | 'warn' | 'error';
     backupEnabled: boolean;
     emergencyStop: boolean;
+    cdpPort: number;
   };
 }
 
@@ -102,6 +105,7 @@ export const DEFAULT_CONFIG: SystemConfig = {
     autoStart: false,
     logLevel: 'info',
     backupEnabled: true,
-    emergencyStop: true
+    emergencyStop: true,
+    cdpPort: 9222
   }
 };

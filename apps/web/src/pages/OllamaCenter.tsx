@@ -8,7 +8,6 @@ import {
   Zap, 
   Clock, 
   Cpu, 
-  Memory, 
   CheckCircle2,
   AlertTriangle,
   XCircle,

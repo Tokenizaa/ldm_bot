@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { loadConfig, saveConfig, updateConfig } from '../config/configStore';
-import type { SystemConfig } from '../../web/src/types/config';
+import { loadConfig, saveConfig, updateConfig } from '../config/configStore.js';
+import type { SystemConfig } from '@forge-deals/shared/types/config';
 
 const configSchema = z.object({
   facebook: z.object({
@@ -103,7 +103,7 @@ export async function configRoutes(fastify: FastifyInstance) {
 
   // GET /api/config/defaults - Get default configuration
   fastify.get('/config/defaults', async () => {
-    const { DEFAULT_CONFIG } = await import('../../web/src/types/config');
+    const { DEFAULT_CONFIG } = await import('@forge-deals/shared/types/config');
     return { success: true, data: DEFAULT_CONFIG };
   });
 }

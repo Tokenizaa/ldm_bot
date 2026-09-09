@@ -7,7 +7,6 @@ import { FacebookControlCenter } from './pages/FacebookControlCenter';
 import { Analytics } from './pages/Analytics';
 import { OllamaCenter } from './pages/OllamaCenter';
 import { ContentPlanner } from './pages/ContentPlanner';
-import { ProductList } from './pages/ProductList';
 import { Settings } from './pages/Settings';
 import { ConfigProvider } from './context/ConfigContext';
 
@@ -39,7 +38,6 @@ export default function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/ollama" element={<OllamaCenter />} />
                 <Route path="/planner" element={<ContentPlanner />} />
-                <Route path="/products" element={<ProductList />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

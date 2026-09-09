@@ -131,7 +131,7 @@ export class ProductScorer {
 
     // Ordenar e retornar melhor
     const sorted = this.sortByScore(scoredProducts);
-    return sorted[0];
+    return sorted[0] ?? null;
   }
 
   /**
@@ -162,8 +162,8 @@ export class ProductScorer {
     const totalScore = products.reduce((sum, p) => sum + p.score, 0);
     const average = totalScore / products.length;
 
-    const highest = products.reduce((max, p) => p.score > max.score ? p : max);
-    const lowest = products.reduce((min, p) => p.score < min.score ? p : min);
+    const highest = products.reduce((max, p) => p.score > max.score ? p : max)!;
+    const lowest = products.reduce((min, p) => p.score < min.score ? p : min)!;
 
     // Distribuição por faixa de score
     const distribution: Record<string, number> = {
@@ -175,11 +175,11 @@ export class ProductScorer {
     };
 
     products.forEach(product => {
-      if (product.score <= 20) distribution['0-20']++;
-      else if (product.score <= 40) distribution['21-40']++;
-      else if (product.score <= 60) distribution['41-60']++;
-      else if (product.score <= 80) distribution['61-80']++;
-      else distribution['81-100']++;
+      if (product.score <= 20) distribution['0-20'] = (distribution['0-20'] ?? 0) + 1;
+      else if (product.score <= 40) distribution['21-40'] = (distribution['21-40'] ?? 0) + 1;
+      else if (product.score <= 60) distribution['41-60'] = (distribution['41-60'] ?? 0) + 1;
+      else if (product.score <= 80) distribution['61-80'] = (distribution['61-80'] ?? 0) + 1;
+      else distribution['81-100'] = (distribution['81-100'] ?? 0) + 1;
     });
 
     return {

@@ -22,7 +22,7 @@
 - [ ] **Ollama** rodando em `localhost:11434`
 - [ ] **Modelo Llama3** baixado (`ollama pull llama3:8b`)
 - [ ] **Projeto Supabase** criado
-- [ ] **Tabelas criadas** (executar `database-schema.sql`)
+- [ ] **Tabelas criadas** (executar `supabase-migration.sql`)
 
 ---
 
@@ -69,7 +69,7 @@ OLLAMA_DEFAULT_MODEL=llama3:8b
 ### 4. Configurar Supabase
 ```bash
 # Executar schema no Supabase SQL Editor
-# Ou usar CLI: supabase db push database-schema.sql
+# Ou usar CLI: supabase db push supabase-migration.sql
 ```
 
 ---

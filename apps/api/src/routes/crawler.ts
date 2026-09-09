@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { CrawlerService } from '../services/crawlerService';
-import { loadConfig } from '../config/configStore';
+import { CrawlerService } from '../services/crawlerService.js';
+import { loadConfig } from '../config/configStore.js';
 
 export async function crawlerRoutes(fastify: FastifyInstance) {
   // POST /api/crawler/run - Execute crawler
@@ -25,7 +25,7 @@ export async function crawlerRoutes(fastify: FastifyInstance) {
 
   // GET /api/crawler/categories - Get available categories
   fastify.get('/crawler/categories', async () => {
-    const { CATEGORIES } = await import('../../web/src/planner/categoryRotation');
+    const { CATEGORIES } = await import('@forge-deals/shared/planner/categoryRotation');
     const config = await loadConfig();
     
     return { 

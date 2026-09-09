@@ -66,12 +66,12 @@ export class CategoryRotation {
 
     if (availableCategories.length === 0) {
       // Se só tem uma categoria, retorna qualquer uma
-      return CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+      return CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]!;
     }
 
     const selectedCategory = availableCategories[
       Math.floor(Math.random() * availableCategories.length)
-    ];
+    ]!;
 
     this.saveLastUsedCategory(selectedCategory.id);
     this.lastUsedCategory = selectedCategory.id;

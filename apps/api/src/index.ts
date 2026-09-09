@@ -1,11 +1,11 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { configRoutes } from './routes/config';
-import { crawlerRoutes } from './routes/crawler';
-import { facebookRoutes } from './routes/facebook';
-import { ollamaRoutes } from './routes/ollama';
-import { analyticsRoutes } from './routes/analytics';
-import { loadEnv } from '../workers/src/config/env';
+import { configRoutes } from './routes/config.js';
+import { crawlerRoutes } from './routes/crawler.js';
+import { facebookRoutes } from './routes/facebook.js';
+import { ollamaRoutes } from './routes/ollama.js';
+import { analyticsRoutes } from './routes/analytics.js';
+import { loadEnv } from '../../workers/src/config/env.js';
 
 async function main() {
   const env = loadEnv();
@@ -36,7 +36,7 @@ async function main() {
     reply.status(500).send({
       success: false,
       error: 'Erro interno do servidor',
-      message: error.message
+      message: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   });
 

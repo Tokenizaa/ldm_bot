@@ -3,10 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "exports": {
+    ".": "./src/index.ts",
     "./types": "./src/types.ts",
+    "./types/config": "./src/types/config.ts",
+    "./planner/types": "./src/planner/types.ts",
+    "./planner/productScore": "./src/planner/productScore.ts",
+    "./planner/antiRepetition": "./src/planner/antiRepetition.ts",
+    "./planner/categoryRotation": "./src/planner/categoryRotation.ts",
     "./logger": "./src/logger.ts",
     "./queues": "./src/queues.ts",
     "./jobs": "./src/jobs.ts"

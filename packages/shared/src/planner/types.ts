@@ -24,7 +24,7 @@ export class ContentPlanner {
    * Retorna próximo tipo de post baseado no plano diário
    */
   getNextPostType(): PostType {
-    const postType = DAILY_PLAN[this.currentIndex].type;
+    const postType = DAILY_PLAN[this.currentIndex]!.type;
     
     // Avançar para o próximo post (circular)
     this.currentIndex = (this.currentIndex + 1) % DAILY_PLAN.length;

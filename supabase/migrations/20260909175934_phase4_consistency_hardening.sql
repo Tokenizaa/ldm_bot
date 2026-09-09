@@ -1,36 +1,49 @@
 -- Fase 4: alinhar o estado persistido com a máquina de publicação implementada.
--- Também remove índices/foreign keys duplicados criados durante as iterações da Fase 3/4.
+--
+-- Este migration foi originalmente aplicado depois que o schema da Fase 3 já
+-- existia no projeto remoto. O repositório, porém, perdeu parte da cadeia
+-- histórica de migrations. Para permitir um `supabase db reset` limpo, esta
+-- migration agora é deliberadamente no-op quando as tabelas ainda não existem.
+-- O baseline versionado seguinte recria o schema completo.
 
-drop index if exists public.monthly_plans_period_start_uidx;
-drop index if exists public.posts_plan_affiliate_uidx;
+DO $$
+BEGIN
+  IF to_regclass('public.monthly_plans') IS NOT NULL
+     AND to_regclass('public.posts') IS NOT NULL
+     AND to_regclass('public.publication_history') IS NOT NULL THEN
 
-alter table public.posts drop constraint if exists posts_affiliate_link_id_fkey;
-alter table public.posts drop constraint if exists posts_plan_id_fkey;
+    DROP INDEX IF EXISTS public.monthly_plans_period_start_uidx;
+    DROP INDEX IF EXISTS public.posts_plan_affiliate_uidx;
 
-alter table public.monthly_plans drop constraint if exists monthly_plans_status_check;
-alter table public.posts drop constraint if exists posts_status_check;
-alter table public.publication_history drop constraint if exists publication_history_status_check;
+    ALTER TABLE public.posts DROP CONSTRAINT IF EXISTS posts_affiliate_link_id_fkey;
+    ALTER TABLE public.posts DROP CONSTRAINT IF EXISTS posts_plan_id_fkey;
 
-alter table public.monthly_plans
-  add constraint monthly_plans_status_check
-  check (status = any (array[
-    'draft','partial','generating','ready','scheduling','scheduled',
-    'published','completed','completed_with_errors','failed','cancelled'
-  ]));
+    ALTER TABLE public.monthly_plans DROP CONSTRAINT IF EXISTS monthly_plans_status_check;
+    ALTER TABLE public.posts DROP CONSTRAINT IF EXISTS posts_status_check;
+    ALTER TABLE public.publication_history DROP CONSTRAINT IF EXISTS publication_history_status_check;
 
-alter table public.posts
-  add constraint posts_status_check
-  check (status = any (array[
-    'draft','scheduled','publishing','published','failed','cancelled'
-  ]));
+    ALTER TABLE public.monthly_plans
+      ADD CONSTRAINT monthly_plans_status_check
+      CHECK (status = ANY (ARRAY[
+        'draft','partial','generating','ready','scheduling','scheduled',
+        'published','completed','completed_with_errors','failed','cancelled'
+      ]));
 
-alter table public.publication_history
-  add constraint publication_history_status_check
-  check (status = any (array[
-    'generated','scheduled','publishing','published','failed'
-  ]));
+    ALTER TABLE public.posts
+      ADD CONSTRAINT posts_status_check
+      CHECK (status = ANY (ARRAY[
+        'draft','scheduled','publishing','published','failed','cancelled'
+      ]));
 
--- O serviço de agendamento trata publication_history como relação 1:1 com o post.
-create unique index if not exists publication_history_post_uq
-  on public.publication_history(post_id)
-  where post_id is not null;
+    ALTER TABLE public.publication_history
+      ADD CONSTRAINT publication_history_status_check
+      CHECK (status = ANY (ARRAY[
+        'generated','scheduled','publishing','published','failed'
+      ]));
+
+    CREATE UNIQUE INDEX IF NOT EXISTS publication_history_post_uq
+      ON public.publication_history(post_id)
+      WHERE post_id IS NOT NULL;
+  END IF;
+END
+$$;

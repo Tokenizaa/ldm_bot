@@ -1,6 +1,6 @@
 # LDM Bot — Fase 4: Automação operacional e execução Facebook
 
-**Status: EM EXECUÇÃO**
+**Status: CONCLUÍDA TECNICAMENTE**
 
 ## Objetivo
 
@@ -54,10 +54,12 @@ FACEBOOK_PUBLISH_BATCH_SIZE=5
 
 O scheduler não publica posts em estado diferente de `scheduled`, utiliza claim condicionado ao estado atual e limita tentativas. Execuções interrompidas não permanecem indefinidamente em `publishing`.
 
-## Limite atual
+## Validação
 
-A Fase 4 ainda precisa de validação ponta a ponta em ambiente de execução com Chrome/CDP e grupo Facebook configurado. A publicação real não deve ser considerada validada apenas pela existência do scheduler.
+Build, testes automatizados, schema remoto, constraints, RLS e índices foram validados na Fase 5.
 
-## Próximo critério de encerramento
+A publicação real em grupo Facebook permanece um gate operacional externo, pois depende de Chrome/Chromium autenticado e acessível via CDP. Esse teste não é substituído por mocks, IDs sintéticos ou simples existência do scheduler.
 
-A Fase 4 será concluída após build/testes, execução controlada do scheduler, validação de recovery/retry e teste controlado de publicação em grupo real.
+## Encerramento
+
+A implementação da Fase 4 está concluída. A validação operacional real está registrada como gate externo na `docs/PHASE5_FINAL_VALIDATION.md`.

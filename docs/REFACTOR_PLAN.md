@@ -44,25 +44,24 @@ Principais conclusões: a Web deve ser preservada; a API precisa ser desacoplada
 
 Objetivo: reduzir a complexidade mantendo o comportamento útil.
 
-Arquitetura alvo:
+#### Concluído
 
-```text
-web/       React + Vite
-api/       Fastify + TypeScript
-supabase/  PostgreSQL/migrations
-```
+- [x] Criar configuração própria da API em `apps/api/src/config/env.ts`.
+- [x] Remover import `apps/api → workers/src/config/env`.
+- [x] Migrar `affiliateLinkService` para `apps/api/src/services/affiliateLinkService.ts`.
+- [x] Remover import `apps/api → workers/src/services/affiliateLinkService`.
+- [x] Remover `bullmq` e `ioredis` das dependências da API, que não os utiliza diretamente.
+- [x] Corrigir o cast `as unknown as AffiliateLink[]` do crawler, preservando os produtos originais após a seleção.
 
-Ajustes prioritários:
+#### Em andamento
 
-- criar configuração própria da API;
-- eliminar dependência da API em código de `workers`;
-- migrar para `api` somente o código necessário do crawler e integrações;
-- auditar os processors internos antes de remover Workers;
-- remover `workers`/Redis/BullMQ/ioredis quando não houver responsabilidade funcional restante;
-- reduzir `packages/shared` ao código realmente compartilhado;
-- eliminar abstrações que só repassam chamadas;
-- corrigir casts inseguros no crawler;
-- manter a Web sem reescrita estrutural.
+- [ ] Auditar os processors internos de `apps/workers` antes de apagar o processo.
+- [ ] Migrar qualquer responsabilidade funcional restante dos Workers.
+- [ ] Remover Redis/BullMQ/ioredis do workspace Workers quando não houver uso funcional restante.
+- [ ] Remover `apps/workers` quando estiver comprovadamente sem responsabilidade.
+- [ ] Reduzir `packages/shared` ao código realmente compartilhado.
+- [ ] Atualizar lockfile após a estabilização das dependências.
+- [ ] Validar build/typecheck da API e Web após as mudanças.
 
 **Critério de conclusão:** Web e API funcionam independentemente e não existe cross-import proibido.
 

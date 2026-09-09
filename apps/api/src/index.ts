@@ -5,6 +5,7 @@ import { crawlerRoutes } from './routes/crawler.js';
 import { facebookRoutes } from './routes/facebook.js';
 import { ollamaRoutes } from './routes/ollama.js';
 import { analyticsRoutes } from './routes/analytics.js';
+import { monthlyPlanRoutes } from './routes/monthlyPlans.js';
 import { loadEnv } from './config/env.js';
 
 async function main() {
@@ -26,6 +27,7 @@ async function main() {
   await fastify.register(facebookRoutes, { prefix: '/api' });
   await fastify.register(ollamaRoutes, { prefix: '/api' });
   await fastify.register(analyticsRoutes, { prefix: '/api' });
+  await fastify.register(monthlyPlanRoutes, { prefix: '/api' });
 
   fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);

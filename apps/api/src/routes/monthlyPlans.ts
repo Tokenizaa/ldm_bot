@@ -12,8 +12,10 @@ export async function monthlyPlanRoutes(fastify: FastifyInstance) {
   fastify.post('/monthly-plans', async (request, reply) => {
     const parsed = createSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ success: false, error: parsed.error.flatten() });
-    try { return { success: true, data: await createMonthlyPlan(parsed.data) }; }
-    catch (error) { request.log.error(error); return reply.status(500).send({ success: false, error: error instanceof Error ? error.message : 'Erro ao criar plano mensal' }); }
+    try {
+      const input = parsed.data;
+      return { success: true, data: await createMonthlyPlan({ periodStart: input.periodStart, ...(input.groupId ? { groupId: input.groupId } : {}), ...(input.groupName ? { groupName: input.groupName } : {}) }) };
+    } catch (error) { request.log.error(error); return reply.status(500).send({ success: false, error: error instanceof Error ? error.message : 'Erro ao criar plano mensal' }); }
   });
 
   fastify.post('/monthly-plans/:id/fill', async (request, reply) => {

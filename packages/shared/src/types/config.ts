@@ -1,7 +1,7 @@
 export interface FacebookConfig {
   postsPerDay: number;
   delayBetweenPosts: number; // minutos
-  activeHours: number[]; // [9, 13, 17, 20]
+  activeHours: number[];
   activeGroups: Array<{
     id: string;
     name: string;
@@ -10,7 +10,7 @@ export interface FacebookConfig {
   }>;
   defaultCTA: string;
   mode: 'safe' | 'aggressive';
-  humanizationLevel: number; // 0-100
+  humanizationLevel: number;
 }
 
 export interface OllamaConfig {
@@ -33,7 +33,7 @@ export interface CrawlerConfig {
     priority: number;
   }>;
   maxProducts: number;
-  scrapingDelay: number; // segundos
+  scrapingDelay: number;
   minScore: number;
   priorityCategories: string[];
 }
@@ -67,8 +67,7 @@ export const DEFAULT_CONFIG: SystemConfig = {
     delayBetweenPosts: 120,
     activeHours: [9, 13, 17, 20],
     activeGroups: [
-      { id: '1', name: 'Ferramentas Profissionais', limit: 3, active: true },
-      { id: '2', name: 'Mecânicos Brasil', limit: 2, active: true }
+      { id: '792906181765134', name: 'A Loja Do Mecânico', limit: 5, active: true }
     ],
     defaultCTA: 'Confira esta oferta! 👉',
     mode: 'safe',

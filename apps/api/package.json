@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node --env-file=.env --import=tsx/esm --watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --env-file=.env dist/index.js",
     "test": "tsx --test src/**/*.test.ts",
     "publish:facebook-due": "tsx src/jobs/publishFacebookDue.ts"
   },

@@ -13,15 +13,20 @@ export interface PublishResult {
 }
 
 interface SelectorCandidate { selector: string; description: string; }
-const COMPOSER_SELECTORS: SelectorCandidate[] = [
-  { selector: 'div[role="textbox"][data-lexical-editor="true"]', description: 'role=textbox + lexical' },
-  { selector: '[aria-label="Escreva algo..."]', description: 'aria-label Escreva algo' },
-  { selector: '[aria-label="Write something..."]', description: 'aria-label Write something' },
-  { selector: 'div[contenteditable="true"][data-lexical-editor="true"]', description: 'contenteditable lexical' },
-  { selector: 'div[contenteditable="true"][role="textbox"]', description: 'contenteditable role=textbox' },
-  { selector: 'form[aria-label] div[contenteditable="true"]', description: 'form contenteditable' },
+const COMPOSER_TRIGGER_SELECTORS: SelectorCandidate[] = [
+  { selector: 'div[role="button"]:has-text("Escreva algo...")', description: 'role=button text Escreva algo' },
+  { selector: 'div[role="button"]:has-text("Write something...")', description: 'role=button text Write something' },
+  { selector: 'div[role="button"][aria-label*="Escreva algo"]', description: 'aria-label contains Escreva algo' },
+  { selector: 'div[role="button"][aria-label*="Write something"]', description: 'aria-label contains Write something' },
+];
+const DIALOG_COMPOSER_SELECTORS: SelectorCandidate[] = [
+  { selector: 'div[role="dialog"] div[role="textbox"][data-lexical-editor="true"]', description: 'dialog textbox lexical' },
+  { selector: 'div[role="dialog"] [aria-placeholder="Crie um post público…"]', description: 'dialog aria-placeholder' },
+  { selector: 'div[role="dialog"] [aria-placeholder="Create a public post..."]', description: 'dialog aria-placeholder EN' },
+  { selector: 'div[role="dialog"] div[contenteditable="true"][data-lexical-editor="true"]', description: 'dialog contenteditable lexical' },
 ];
 const SUBMIT_BUTTON_SELECTORS: SelectorCandidate[] = [
+  { selector: 'div[role="button"][aria-label="Postar"]', description: 'role=button aria-label Postar' },
   { selector: '[aria-label="Publicar"]', description: 'aria-label Publicar' },
   { selector: '[aria-label="Post"]', description: 'aria-label Post' },
   { selector: '[aria-label="Publicar no grupo"]', description: 'aria-label Publicar no grupo' },
@@ -62,13 +67,29 @@ export class FacebookPublisher {
     if (!contexts.length) throw new Error('Nenhum contexto encontrado no Chrome conectado.');
     const context = contexts[0]!;
     this.connection = { browser, context, isConnected: true };
-    this.page = await context.newPage();
+
+    // Reutilizar página Facebook existente no contexto CDP
+    const existingPages = context.pages();
+    const fbPage = existingPages.find((p) => p.url().includes('facebook.com'));
+    if (fbPage) {
+      this.page = fbPage;
+      console.log('[FB] Reutilizando página Facebook existente:', this.page.url());
+    } else {
+      this.page = await context.newPage();
+      console.log('[FB] Criada nova página (nenhuma página Facebook encontrada no contexto)');
+    }
     await this.setupPage();
   }
 
   async cleanup(): Promise<void> {
-    if (this.page) { await this.page.close().catch(() => undefined); this.page = null; }
-    if (this.connection) { await this.connection.browser.close().catch(() => undefined); this.connection = null; }
+    // Fechar apenas a página que o Publisher criou (se não reutilizou)
+    // NÃO fechar o browser CDP compartilhado
+    if (this.page && !this.connection?.browser.isConnected()) {
+      await this.page.close().catch(() => undefined);
+    }
+    this.page = null;
+    // Não desconectar/fechar o browser CDP — pode estar em uso por outros processos
+    this.connection = null;
   }
 
   async publishPost(content: { text: string; link: string; imageUrl?: string | undefined }, groupName: string): Promise<PublishResult> {
@@ -86,10 +107,11 @@ export class FacebookPublisher {
         return { success: false, error: 'Sessão do Facebook não autenticada no Chrome CDP — faça login manualmente no perfil', screenshotPath: screenshot };
       }
       if (isSafe && humanLevel > 40) { await this.randomDelay(800, 2000); await this.scrollPage(this.page, 100, 300); }
-      const composer = await this.findWithFallbacks(this.page, COMPOSER_SELECTORS, `Composer (${groupName})`, this.getTimeout());
-      if (!composer) return { success: false, error: `Composer não encontrado — nenhum seletor funcionou: ${COMPOSER_SELECTORS.map((s) => s.description).join(', ')}`, screenshotPath: await this.screenshot('composer-not-found') };
-      console.log(`[FB] Composer encontrado: ${composer.matched.description}`);
-      await composer.element.click();
+      await this.openComposerDialog(this.page);
+      const composer = await this.findDialogComposer(this.page);
+      if (!composer) return { success: false, error: `Composer no dialog não encontrado: ${DIALOG_COMPOSER_SELECTORS.map((s) => s.description).join(', ')}`, screenshotPath: await this.screenshot('composer-not-found') };
+      console.log(`[FB] Composer dialog encontrado`);
+      await composer.click({ force: true });
       await this.randomDelay(300, 800);
       const fullText = content.link ? `${content.text}\n\n${content.link}` : content.text;
       await this.typeHumanized(this.page, fullText, humanLevel);
@@ -213,4 +235,16 @@ export class FacebookPublisher {
   private async randomDelay(minMs: number, maxMs: number): Promise<void> { const ms = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs; await new Promise((resolve) => setTimeout(resolve, ms)); }
   private async scrollPage(page: Page, minY: number, maxY: number): Promise<void> { await page.mouse.wheel(0, Math.floor(Math.random() * (maxY - minY + 1)) + minY); await this.randomDelay(200, 600); }
   private mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number { return ((value - inMin) / (inMax - inMin)) * (outMax - outMin) + outMin; }
+
+  private async openComposerDialog(page: Page): Promise<void> {
+    const trigger = await this.findWithFallbacks(page, COMPOSER_TRIGGER_SELECTORS, 'Botão Escreva algo', this.getTimeout());
+    if (!trigger) throw new Error('Botão "Escreva algo..." não encontrado — nenhum seletor funcionou');
+    await trigger.element.click({ force: true });
+    await page.waitForSelector('div[role="dialog"] >> text="Criar post"', { state: 'visible', timeout: this.getTimeout() });
+  }
+
+  private async findDialogComposer(page: Page): Promise<Locator | null> {
+    const composer = await this.findWithFallbacks(page, DIALOG_COMPOSER_SELECTORS, 'Composer no dialog', this.getTimeout());
+    return composer?.element ?? null;
+  }
 }

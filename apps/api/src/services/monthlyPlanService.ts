@@ -48,8 +48,6 @@ export async function createMonthlyPlan(input: CreateMonthlyPlanInput) {
     .single();
 
   if (planError) {
-    // The unique period_start constraint closes the race between concurrent creators.
-    // Re-read the winner instead of returning a spurious 500.
     const { data: racedPlan, error: racedPlanError } = await supabase
       .from('monthly_plans')
       .select('*')
@@ -78,12 +76,22 @@ export async function createMonthlyPlan(input: CreateMonthlyPlanInput) {
 
   const { error: postsError } = await supabase.from('posts').insert(rows);
   if (postsError) {
-    // Do not leave a half-created plan behind when slot creation fails.
     await supabase.from('monthly_plans').delete().eq('id', plan.id);
     throw postsError;
   }
 
   return plan;
+}
+
+export async function listMonthlyPlans(limit = 12) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from('monthly_plans')
+    .select('*, posts(*)')
+    .order('period_start', { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 50));
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getMonthlyPlan(planId: string) {

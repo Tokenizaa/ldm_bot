@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node --env-file=.env dist/index.js",
     "test": "tsx --test src/**/*.test.ts",
-    "publish:facebook-due": "tsx src/jobs/publishFacebookDue.ts"
+    "publish:facebook-due": "tsx src/jobs/publishFacebookDue.ts",
+    "verify:facebook-live": "tsx src/jobs/verifyFacebookLive.ts"
   },
   "dependencies": {
     "@forge-deals/shared": "file:../../packages/shared",

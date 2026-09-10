@@ -14,7 +14,10 @@ const PUBLISHER_BATCH_SIZE = Math.max(1, Math.min(20, Number.parseInt(process.en
 
 async function main() {
   const env = loadEnv();
-  const fastify = Fastify({ logger: env.NODE_ENV !== 'production' });
+  const fastify = Fastify({
+    logger: env.NODE_ENV !== 'production',
+    disableRequestLogging: env.NODE_ENV !== 'production',
+  });
 
   await fastify.register(cors, {
     origin: env.CORS_ORIGIN ?? (env.NODE_ENV === 'development' ? 'http://localhost:5173' : false),

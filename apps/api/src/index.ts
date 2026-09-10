@@ -14,13 +14,10 @@ const PUBLISHER_BATCH_SIZE = Math.max(1, Math.min(20, Number.parseInt(process.en
 
 async function main() {
   const env = loadEnv();
-  
-  const fastify = Fastify({
-    logger: env.NODE_ENV !== 'production'
-  });
+  const fastify = Fastify({ logger: env.NODE_ENV !== 'production' });
 
   await fastify.register(cors, {
-    origin: true,
+    origin: env.CORS_ORIGIN ?? (env.NODE_ENV === 'development' ? 'http://localhost:5173' : false),
     credentials: true
   });
 
@@ -35,20 +32,14 @@ async function main() {
 
   fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
-    reply.status(500).send({
-      success: false,
-      error: 'Erro interno do servidor',
-      message: error instanceof Error ? error.message : 'Erro desconhecido'
-    });
+    reply.status(500).send({ success: false, error: 'Erro interno do servidor', message: error instanceof Error ? error.message : 'Erro desconhecido' });
   });
 
   const PORT = parseInt(env.API_PORT || '3001');
   const HOST = env.API_HOST || '0.0.0.0';
-
   try {
     await fastify.listen({ port: PORT, host: HOST });
     console.log(`🚀 API rodando em http://${HOST}:${PORT}`);
-
     let running = false;
     const runPublisher = async () => {
       if (running) return;
@@ -56,36 +47,18 @@ async function main() {
       try {
         const result = await publishDueFacebookPosts(PUBLISHER_BATCH_SIZE);
         if (result.attempted > 0) console.log(JSON.stringify({ job: 'publish-facebook-due', ...result }));
-      } catch (error) {
-        fastify.log.error(error, 'Facebook publisher scheduler failed');
-      } finally {
-        running = false;
-      }
+      } catch (error) { fastify.log.error(error, 'Facebook publisher scheduler failed'); }
+      finally { running = false; }
     };
-
     const publisherTimer = setInterval(runPublisher, PUBLISHER_INTERVAL_MS);
     publisherTimer.unref();
     await runPublisher();
-
-    const shutdown = () => {
-      clearInterval(publisherTimer);
-    };
+    const shutdown = () => clearInterval(publisherTimer);
     process.once('SIGTERM', shutdown);
     process.once('SIGINT', shutdown);
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
+  } catch (err) { fastify.log.error(err); process.exit(1); }
 }
 
 main();
-
-process.on('SIGTERM', () => {
-  console.log('🛑 Recebido SIGTERM, finalizando...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('🛑 Recebido SIGINT, finalizando...');
-  process.exit(0);
-});
+process.on('SIGTERM', () => { console.log('🛑 Recebido SIGTERM, finalizando...'); process.exit(0); });
+process.on('SIGINT', () => { console.log('🛑 Recebido SIGINT, finalizando...'); process.exit(0); });

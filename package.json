@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"wait-on http://localhost:3001/health && npm run dev:web\"",
+    "dev": "concurrently -k \"npm run dev:api\" \"wait-on http://localhost:3001/health && npm run dev:web\"",
     "dev:api": "npm run dev --workspace=@forge-deals/api",
     "dev:web": "npm run dev --workspace=@forge-deals/web",
     "build": "npm run build --workspaces",

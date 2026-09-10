@@ -1,3 +1,15 @@
+-- DEPRECATED LEGACY BOOTSTRAP
+--
+-- DO NOT use this file as the source of truth for the current database schema.
+-- The current schema is versioned under supabase/migrations/.
+-- In particular, this legacy file contains the original posts model and is
+-- intentionally retained only for historical reference.
+--
+-- Reproducible current schema:
+--   supabase/migrations/20260909180000_reconstruct_current_schema.sql
+--
+-- Use Supabase migrations for all new environments and schema changes.
+
 -- System configuration table for frontend-controlled settings
 CREATE TABLE IF NOT EXISTS system_config (
   key TEXT PRIMARY KEY,

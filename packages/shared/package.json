@@ -14,6 +14,7 @@
     "./planner/productScore": "./src/planner/productScore.ts",
     "./planner/antiRepetition": "./src/planner/antiRepetition.ts",
     "./planner/categoryRotation": "./src/planner/categoryRotation.ts",
+    "./planner/monthlyPlan": "./src/planner/monthlyPlan.ts",
     "./logger": "./src/logger.ts",
     "./queues": "./src/queues.ts",
     "./jobs": "./src/jobs.ts"

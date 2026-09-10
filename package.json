@@ -11,13 +11,11 @@
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "npm run dev --workspace=@forge-deals/api",
     "dev:web": "npm run dev --workspace=@forge-deals/web",
-    "dev:workers": "npm run dev --workspace=@forge-deals/workers",
     "build": "npm run build --workspaces",
     "build:api": "npm run build --workspace=@forge-deals/api",
     "build:web": "npm run build --workspace=@forge-deals/web",
     "chrome:legacy": "node scripts/setup-and-start.js",
     "chrome:setup": "node scripts/setup-and-start.js",
-    "test": "npm run test --workspace=@forge-deals/workers",
     "test:cdp": "ts-node tests/test-cdp-connection.ts"
   },
   "keywords": [
@@ -31,10 +29,13 @@
   "author": "ForgeDeals",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.15.0",
     "concurrently": "^9.2.1",
+    "playwright": "^1.63.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

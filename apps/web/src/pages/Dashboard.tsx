@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Activity, AlertTriangle, Calendar, Database, Facebook, Package, RefreshCw } from 'lucide-react';
+import { Activity, AlertTriangle, Calendar, Database, Package, RefreshCw, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api, type MonthlyPlan, type SystemConfig } from '../lib/api';
 
@@ -82,7 +82,7 @@ export const Dashboard = () => {
         <Metric title="Produtos" value={overview?.totalProducts ?? 0} icon={Package} />
         <Metric title="Links monitorados" value={overview?.activeLinks ?? 0} icon={Activity} />
         <Metric title="Quedas hoje" value={overview?.priceDropsToday ?? 0} icon={AlertTriangle} />
-        <Metric title="Posts hoje" value={operational?.postsToday ?? 0} icon={Facebook} />
+        <Metric title="Posts hoje" value={operational?.postsToday ?? 0} icon={Share2} />
         <Metric title="Agendados" value={scheduled} icon={Calendar} />
         <Metric title="Grupos ativos" value={activeGroups} icon={Database} />
       </div>

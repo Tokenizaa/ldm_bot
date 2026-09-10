@@ -19,6 +19,13 @@ interface ScrapedProduct {
   url: string;
 }
 
+const AFFILIATE_ID_SUFFIX = '/20889';
+
+function buildAffiliateUrl(originalUrl: string): string {
+  const url = originalUrl.split('?')[0]?.split('#')[0] || originalUrl;
+  return url.endsWith(AFFILIATE_ID_SUFFIX) ? url : `${url.replace(/\/$/, '')}${AFFILIATE_ID_SUFFIX}`;
+}
+
 export class CrawlerService {
   private connection: ChromeConnection | null = null;
   private page: Page | null = null;
@@ -42,8 +49,6 @@ export class CrawlerService {
     if (!this.page) throw new Error('Page not initialized');
     const email = this.config.crawler.email || process.env.LOJA_DO_MECANICO_EMAIL;
     const password = this.config.crawler.password || process.env.LOJA_DO_MECANICO_PASSWORD;
-
-    // The Loja do Mecânico catalog is publicly accessible. Credentials are optional.
     if (!email || !password) return true;
 
     try {
@@ -74,8 +79,6 @@ export class CrawlerService {
     await this.gotoCatalogPage(url);
     let productUrls = await this.collectProductUrls();
 
-    // Some category pages are redirected or rendered without product anchors.
-    // Use the public home catalog as a deterministic fallback instead of returning success with zero products.
     if (productUrls.length === 0) {
       await this.gotoCatalogPage('https://www.lojadomecanico.com.br/');
       productUrls = await this.collectProductUrls();
@@ -165,22 +168,16 @@ export class CrawlerService {
         const url = clean(productSchema?.url || offer?.url) || location.href;
 
         if (!title || !url || !price || price <= 0) return null;
-        return {
-          title,
-          price,
-          oldPrice: oldPrice > price ? oldPrice : price,
-          brand: brand || 'Sem marca',
-          category,
-          url
-        };
+        return { title, price, oldPrice: oldPrice > price ? oldPrice : price, brand: brand || 'Sem marca', category, url };
       });
 
       if (!data) return null;
 
+      const affiliateUrl = buildAffiliateUrl(data.url);
       return {
         id: '',
         product_name: data.title,
-        affiliate_url: data.url,
+        affiliate_url: affiliateUrl,
         original_url: data.url,
         current_price: data.price,
         previous_price: data.oldPrice,
@@ -203,10 +200,12 @@ export class CrawlerService {
     for (const product of products) {
       const existing = await affiliateLinkService.findByAffiliateUrl(product.affiliate_url);
       if (existing) {
-        if (existing.current_price !== product.current_price) await affiliateLinkService.addPriceRecord(existing.id, product.current_price);
-      } else {
-        await affiliateLinkService.createLink(product);
+        if (existing.current_price !== product.current_price) {
+          await affiliateLinkService.addPriceRecord(existing.id, product.current_price);
+        }
+        continue;
       }
+      await affiliateLinkService.createLink(product);
     }
   }
 
@@ -214,12 +213,9 @@ export class CrawlerService {
     try {
       await this.initialize();
       await this.login();
-
       const category = this.config.crawler.activeCategories[0] || CATEGORIES[0]!;
       const products = await this.extractProductsFromCategory(category.url);
       if (products.length === 0) throw new Error(`Nenhum produto encontrado em ${category.url} nem no catálogo público.`);
-
-      // Persist every valid scraped product. Scoring/publication selection happens later.
       await this.saveProducts(products);
       return { success: true, products };
     } catch (error) {
@@ -234,7 +230,6 @@ export class CrawlerService {
       await this.page.close().catch(() => undefined);
       this.page = null;
     }
-    // CDP attaches to an existing Chrome process. Never close that browser from the crawler.
     this.connection = null;
   }
 }

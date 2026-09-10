@@ -7,7 +7,8 @@ const EnvSchema = z.object({
   LOJA_DO_MECANICO_EMAIL: z.string().min(1).optional(),
   LOJA_DO_MECANICO_PASSWORD: z.string().min(1).optional(),
   API_PORT: z.string().default('3001'),
-  API_HOST: z.string().default('0.0.0.0')
+  API_HOST: z.string().default('0.0.0.0'),
+  CORS_ORIGIN: z.string().min(1).optional()
 });
 
 export type ApiEnv = z.infer<typeof EnvSchema>;

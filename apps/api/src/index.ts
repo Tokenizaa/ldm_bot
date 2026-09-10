@@ -18,7 +18,7 @@ async function main() {
 
   await fastify.register(cors, {
     origin: env.CORS_ORIGIN ?? (env.NODE_ENV === 'development' ? 'http://localhost:5173' : false),
-    credentials: true
+    credentials: true,
   });
 
   fastify.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -32,33 +32,53 @@ async function main() {
 
   fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
-    reply.status(500).send({ success: false, error: 'Erro interno do servidor', message: error instanceof Error ? error.message : 'Erro desconhecido' });
+    reply.status(500).send({
+      success: false,
+      error: 'Erro interno do servidor',
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
+    });
   });
 
-  const PORT = parseInt(env.API_PORT || '3001');
-  const HOST = env.API_HOST || '0.0.0.0';
-  try {
-    await fastify.listen({ port: PORT, host: HOST });
-    console.log(`🚀 API rodando em http://${HOST}:${PORT}`);
-    let running = false;
-    const runPublisher = async () => {
-      if (running) return;
-      running = true;
-      try {
-        const result = await publishDueFacebookPosts(PUBLISHER_BATCH_SIZE);
-        if (result.attempted > 0) console.log(JSON.stringify({ job: 'publish-facebook-due', ...result }));
-      } catch (error) { fastify.log.error(error, 'Facebook publisher scheduler failed'); }
-      finally { running = false; }
-    };
-    const publisherTimer = setInterval(runPublisher, PUBLISHER_INTERVAL_MS);
-    publisherTimer.unref();
-    await runPublisher();
-    const shutdown = () => clearInterval(publisherTimer);
-    process.once('SIGTERM', shutdown);
-    process.once('SIGINT', shutdown);
-  } catch (err) { fastify.log.error(err); process.exit(1); }
+  const port = Number.parseInt(env.API_PORT || '3001', 10);
+  const host = env.API_HOST || '0.0.0.0';
+
+  await fastify.listen({ port, host });
+  console.log(`🚀 API rodando em http://${host}:${port}`);
+
+  // O publisher é um worker de fundo. Ele nunca deve bloquear ou derrubar a API.
+  let running = false;
+  const runPublisher = async () => {
+    if (running) return;
+    running = true;
+    try {
+      const result = await publishDueFacebookPosts(PUBLISHER_BATCH_SIZE);
+      if (result.attempted > 0) {
+        console.log(JSON.stringify({ job: 'publish-facebook-due', ...result }));
+      }
+    } catch (error) {
+      fastify.log.error(error, 'Facebook publisher scheduler failed; API remains online');
+    } finally {
+      running = false;
+    }
+  };
+
+  // Não executar Playwright/CDP durante o boot do servidor. A API precisa ficar
+  // disponível mesmo quando o Chrome 9222 estiver fechado ou indisponível.
+  const publisherTimer = setInterval(runPublisher, PUBLISHER_INTERVAL_MS);
+  const publisherStartupTimer = setTimeout(runPublisher, 5_000);
+  publisherTimer.unref();
+  publisherStartupTimer.unref();
+
+  const shutdown = async () => {
+    clearInterval(publisherTimer);
+    clearTimeout(publisherStartupTimer);
+    await fastify.close().catch(() => undefined);
+  };
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
 }
 
-main();
-process.on('SIGTERM', () => { console.log('🛑 Recebido SIGTERM, finalizando...'); process.exit(0); });
-process.on('SIGINT', () => { console.log('🛑 Recebido SIGINT, finalizando...'); process.exit(0); });
+main().catch((error) => {
+  console.error('❌ Falha fatal ao iniciar a API:', error);
+  process.exitCode = 1;
+});

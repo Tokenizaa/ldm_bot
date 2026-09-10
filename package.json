@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev": "concurrently \"npm run dev:api\" \"wait-on http://localhost:3001/health && npm run dev:web\"",
     "dev:api": "npm run dev --workspace=@forge-deals/api",
     "dev:web": "npm run dev --workspace=@forge-deals/web",
     "build": "npm run build --workspaces",
@@ -35,7 +35,8 @@
     "playwright": "^1.63.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wait-on": "^8.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
